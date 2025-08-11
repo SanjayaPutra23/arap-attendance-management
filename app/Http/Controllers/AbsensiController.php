@@ -8,6 +8,7 @@ use App\Models\Peserta;
 use App\Models\Pool;
 use App\Models\Pod;
 use App\Models\Setting;
+use App\Models\Mesin;
 use App\Models\Libur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
