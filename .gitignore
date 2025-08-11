@@ -1,14 +1,42 @@
+# Laravel standard ignore
+/vendor
 /node_modules
-/public/hot
-/public/assets/img
 /public/storage
 /storage/*.key
-/vendor
 .env
-.env.backup
+.env.*
 .phpunit.result.cache
+
+# Laravel log & cache
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+!/storage/.gitignore
+!/storage/logs/.gitignore
+!/storage/framework/.gitignore
+
+# Cache files
+*.log
+*.cache
+
+# IDE/editor
+.idea/
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Assets
+/public/hot
+/public/assets/img/*
+!/public/assets/img/.gitkeep
+
+# Docker
 docker-compose.override.yml
+
+# Homestead
 Homestead.json
 Homestead.yaml
-npm-debug.log
-yarn-error.log

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('css'); ?>
 
 
@@ -33,6 +31,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nama Mesin Absensi</th>
+                                <th>grup mesin</th>
                                 <th>Sinkronisasi Terakhir</th>
                                 <th>Aksi</th>
                             </tr>
@@ -42,6 +41,7 @@
                                 <tr>
                                     <td><?php echo e($loop->iteration); ?></td>
                                     <td><?php echo e($data->name); ?></td>
+                                    <td><?php echo e(optional($data->groupOption)->text ?? '-'); ?></td>
                                     <td><?php echo e(tsp($data->last_sync)); ?></td>
                                     <td>
                                         <?php if($data->tipe     == "ip"): ?>

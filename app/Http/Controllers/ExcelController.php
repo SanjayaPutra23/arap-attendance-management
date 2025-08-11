@@ -33,7 +33,7 @@ class ExcelController extends Controller
         $nama = $absensi->type."_".namabulan($absensi->bln)."-".$absensi->thn;
 
         $list_tgl=dateRange( $absensi->tgl_mulai, $absensi->tgl_selesai);
-        $detailArray = DetailAbsen::where('id_absen', $absensi->id)->get();
+        $detailArray = DetailAbsen::where('id_absen', $absensi->id)->orderBy('id', 'asc')->get();
         return Excel::download(new ExAbsen($detailArray, $list_tgl), 'Data_'.$nama.'.xlsx');
 
     }
@@ -56,7 +56,7 @@ class ExcelController extends Controller
 
 
         //dd($tgllist);
-        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->get();
+        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->orderby('id', 'ASC')->get();
         $dataa= $dataAbsen[0];
         $datay = explode("&",$dataa->presensi);
         array_pop($datay);
@@ -108,6 +108,7 @@ class ExcelController extends Controller
             array_push($presnsiArray,$rekap);
             $detailArray [$data->data_peserta] = $presnsiArray;
         }
+        //dd($detailArray);
         return Excel::download(new ExRekap($detailArray, $tgllist), 'Rekap_'.$nama.'.xlsx');
 
     }
@@ -129,7 +130,7 @@ class ExcelController extends Controller
 
 
         //dd($tgllist);
-        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->get();
+        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->orderby('id', 'ASC')->get();
         $dataa= $dataAbsen[0];
         $datay = explode("&",$dataa->presensi);
         array_pop($datay);
@@ -186,6 +187,7 @@ class ExcelController extends Controller
             $detailArray [$data->data_peserta] = $presnsiArray;
             $line++;
         }
+
         return Excel::download(new ExRekap($detailArray, $tgllist), 'Hitungan_Rekap_'.$nama.'.xlsx');
 
     }

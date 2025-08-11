@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mesin;
+use App\Models\Option;
 use Rats\Zkteco\Lib\ZKTeco;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +17,10 @@ class MesinController extends Controller
      */
     public function index()
     {
-        $listm = Mesin::all();
+        $listm = Mesin::with('groupOption:id,text')->get();
+        $grup = Option::where('list',2)->get();
 
-        return view('page.ListMesin',['list'=> $listm]);
+        return view('page.ListMesin',['list'=> $listm, 'grup'=> $grup]);
     }
 
     /**
@@ -77,7 +79,8 @@ class MesinController extends Controller
      */
     public function edit(Mesin $mesin)
     {
-        return view('modal.mesinedit',['edit'=> $mesin]);
+        $grup = Option::where('list',2)->get();
+        return view('modal.mesinedit',['edit'=> $mesin, 'grup'=> $grup]);
     }
 
     /**

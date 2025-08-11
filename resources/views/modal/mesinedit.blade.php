@@ -12,11 +12,19 @@
                     <label>Nama Mesin</label>
                     <input class="form-control" type="text" placeholder="Nama Mesin" name="name" value="{{$edit->name}}" >
                 </div>
-                <div class="form-group row">
+                <div class="form-group">
                     <label>Jenis Mesin</label>
                     <select class="form-control" name="tipe">
                         <option value="ip" @if($edit->tipe == "ip") selected @endif>IP based</option>
                         <option value="usb" @if($edit->tipe == "usb") selected @endif>USB</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Absen</label>
+                    <select class="form-control" name="grup">
+                        @foreach($grup as $data)
+                        <option value="{{$data->id}}" @if($edit->grup == $data->id) selected @endif>{{ $data->text }}</option>
+                        <@endforeach
                     </select>
                 </div>
                 <div class="form-group ">

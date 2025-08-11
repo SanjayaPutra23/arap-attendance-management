@@ -42,6 +42,15 @@
                                             <option value="usb">USB</option>
                                         </select>
                                     </div>
+                                     <div class="form-group row">
+                                        <label>Jenis Absen</label>
+                                        <select class="form-control" name="grup">
+                                            @foreach($grup as $data)
+                                            <option value="{{$data->id }}"> {{ $data->text }}</option>
+                                            @endforeach
+                                            
+                                        </select>
+                                    </div>
                                     <div class="form-group row">
                                         <label>IP Address</label>
                                         <input class="form-control" type="text" placeholder="Alamat Internet protokol mesin" name="ip" >
@@ -59,6 +68,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nama Mesin Absensi</th>
+                                <th>Grup</th>
                                 <th>Alamat IP</th>
                                 <th>Aksi</th>
                             </tr>
@@ -68,6 +78,7 @@
                                 <tr>
                                     <td>{{$loop->iteration}}</td>
                                     <td>{{$data->name}}({{ $data->tipe }})</td>
+                                    <td>{{ optional($data->groupOption)->text ?? '-' }}</td>
                                     <td>{{$data->ip}}:{{$data->port}}</td>
                                     <td>
                                         <a href="{{ route('mesin.show', $data->id) }}" class="badge badge-info">Check Koneksi</a>

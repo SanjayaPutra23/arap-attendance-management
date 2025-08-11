@@ -9,4 +9,6 @@ class Pool extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+    
 }

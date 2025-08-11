@@ -9,7 +9,10 @@ use App\Models\Pool;
 use App\Models\Libur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use PDF;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 class SatpamController extends Controller
 {
@@ -102,7 +105,171 @@ class SatpamController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+
+public function store(Request $request)
+{
+    // Normalisasi agar "07" -> 7
+    $request->merge([
+        'bln' => is_null($request->bln) ? null : (int) $request->bln,
+        'thn' => is_null($request->thn) ? null : (int) $request->thn,
+    ]);
+
+    // 1) Validasi
+    $data = $request->validate([
+        'type'  => 'required|in:mingguan,bulanan',
+        'thn'   => 'required|integer|min:2000|max:2100',
+        'bln'   => 'required|integer|between:1,12',
+        'tgl_m' => 'nullable|string', // "YYYY-MM-DD&index" untuk mingguan
+    ]);
+
+    $type  = $data['type'];
+    $bulan = (int) $data['bln'];
+    $thn   = (int) $data['thn'];
+
+    // 2) Tentukan periode
+    if ($type === 'mingguan') {
+        [$tgl_mu, $weekIndexRaw] = explode('&', (string) ($request->tgl_m ?? '')) + [null, -1];
+        if (!$tgl_mu) return back()->with('msg', 'danger-Tanggal mulai minggu tidak valid');
+
+        $weekIndex = (int) $weekIndexRaw + 1;
+        $start = Carbon::parse($tgl_mu)->startOfDay();
+        $end   = (clone $start)->addDays(6)->endOfDay();
+        $typex = "minggu ke {$weekIndex}";
+    } else {
+        // 20 (bulan-1) s/d 19 (bulan ini)
+        $start = Carbon::create($thn, $bulan, 20)->subMonth()->startOfDay();
+        $end   = Carbon::create($thn, $bulan, 19)->endOfDay();
+        $typex = "bulanan";
+    }
+
+    // 3) Cek Absensi satpam (peg = 0)
+    $existingId = Absensi::where('type', $typex)
+        ->where('thn', (string) $thn)
+        ->where('bln', (string) $bulan)
+        ->where('peg', 0)
+        ->value('id');
+
+    if ($existingId) {
+        return redirect()->route('absensi.show', $existingId)
+            ->with('msg', 'success-berhasil menemukan absensi');
+    }
+
+    // 4) Daftar tanggal (string Y-m-d sesuai pools.date = string)
+    $periodDays = CarbonPeriod::create($start->toDateString(), $end->toDateString());
+    $allDates   = collect($periodDays)->map->toDateString();
+    if ($allDates->isEmpty()) {
+        return back()->with('msg', 'danger-Periode tanggal kosong');
+    }
+
+    // 5) Ambil peserta SATPAM saja + urutkan by id (ganti ke ->orderBy('uid') kalau mau)
+    $peserta = Peserta::query()
+        ->whereNotNull('type')
+        ->where('type', 'Satpam')
+        ->orderBy('id', 'asc')
+        ->get(['id', 'name', 'nik', 'uid']);
+
+    if ($peserta->isEmpty()) {
+        return back()->with('msg', 'danger-Tidak ada peserta Satpam');
+    }
+
+    $uids = $peserta->pluck('uid')->map(fn($v) => (string) $v);
+
+    // 6) Libur → map[tanggal => ket]
+    $liburMap = Libur::query()->pluck('ket', 'tanggal');
+
+    // 7) Prefetch Pool untuk semua uid & tanggal periode
+    $fromDate = $allDates->first();
+    $toDate   = $allDates->last();
+
+    $pools = Pool::query()
+        ->whereIn('iduser', $uids)
+        ->whereBetween('date', [$fromDate, $toDate]) // kolom string Y-m-d
+        ->get(['iduser', 'date', 'type', 'time', 'timestamp']);
+
+    // Index-kan supaya O(1): $poolIndex[$uid][$date] = ['in' => ..., 'out' => ...]
+    $poolIndex = [];
+    foreach ($pools as $rec) {
+        $uid  = (string) $rec->iduser;
+        $date = (string) $rec->date;
+        if (!isset($poolIndex[$uid][$date])) {
+            $poolIndex[$uid][$date] = ['in' => null, 'out' => null, 'latest_ts' => $rec->timestamp];
+        }
+        if ((string) $rec->type === '0') {
+            $curIn = $poolIndex[$uid][$date]['in'];
+            $poolIndex[$uid][$date]['in'] = is_null($curIn) ? $rec->time : min($curIn, $rec->time);
+        } elseif ((string) $rec->type === '1') {
+            $curOut = $poolIndex[$uid][$date]['out'];
+            $poolIndex[$uid][$date]['out'] = is_null($curOut) ? $rec->time : max($curOut, $rec->time);
+        }
+        if ($rec->timestamp > $poolIndex[$uid][$date]['latest_ts']) {
+            $poolIndex[$uid][$date]['latest_ts'] = $rec->timestamp;
+        }
+    }
+
+    // 8) Transaksi: buat Absensi (peg=0) + Detail
+    DB::beginTransaction();
+    try {
+        $abs = new Absensi();
+        $abs->type        = $typex;
+        $abs->tgl_mulai   = $start->toDateTimeString();   // kolom string di schema awal → tetap string
+        $abs->tgl_selesai = $end->toDateTimeString();
+        $abs->thn         = (string) $thn;
+        $abs->bln         = (string) $bulan;
+        $abs->peg         = 0; // <— Satpam
+        $abs->maker       = Auth::id();
+        $abs->save();
+
+        $now   = now()->toDateTimeString();
+        $batch = [];
+
+        foreach ($peserta as $p) {
+            $uid     = (string) $p->uid;
+            $namaNik = "{$p->name}-{$p->nik}";
+
+            $presensiStr = '';
+            foreach ($allDates as $d) {
+                // Weekend/Libur (ikuti php dayOfWeek: 0=Min,6=Sab)
+                $dowPhp   = Carbon::parse($d)->dayOfWeek;
+                $isWeekend= ($dowPhp === 0 || $dowPhp === 6);
+                $isHoliday= $liburMap->has($d);
+                $libur    = ($isWeekend || $isHoliday) ? 1 : 0;
+
+                $pi  = $poolIndex[$uid][$d] ?? null;
+                $had = $pi['in']  ?? 0; // "HH:ii:ss" atau 0
+                $pul = $pi['out'] ?? 0;
+
+                // Format presensi tetap: Y-m-d_libur_in_out&
+                $presensiStr .= "{$d}_{$libur}_{$had}_{$pul}&";
+            }
+
+            $batch[] = [
+                'id_absen'     => $abs->id,
+                'id_peserta'   => (int) $uid, // unsignedBigInteger → cast int
+                'data_peserta' => $namaNik,
+                'presensi'     => $presensiStr,
+                'created_at'   => $now,
+                'updated_at'   => $now,
+            ];
+        }
+
+        foreach (array_chunk($batch, 1000) as $chunk) {
+            DetailAbsen::insert($chunk);
+        }
+
+        DB::commit();
+
+        // NB: kamu tadi redirect ke route('satpam.show', $abs->id)
+        return redirect()->route('satpam.show', $abs->id)
+            ->with('msg', 'success-berhasil membuat absensi');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return redirect()->route('satpam.index')
+            ->with('msg', 'danger-Gagal euy, karena '.$e->getMessage());
+    }
+}
+
+
+    public function storeX(Request $request)
     {
         //dd($request);
         $type = $request->type;
@@ -111,7 +278,7 @@ class SatpamController extends Controller
         $tgl_mz = explode("&", $request->tgl_m);
         $tgl_mu = $tgl_mz[0];
         $mingguke = $tgl_mz[1]+1;
-//dd($mingguke);
+  
         if ($type == "mingguan") {
             $tgl_mulai = $tgl_mu . " 00:00:00";
             $tgl_s = strtotime($tgl_mu);

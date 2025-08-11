@@ -12,11 +12,19 @@
                     <label>Nama Mesin</label>
                     <input class="form-control" type="text" placeholder="Nama Mesin" name="name" value="<?php echo e($edit->name); ?>" >
                 </div>
-                <div class="form-group row">
+                <div class="form-group">
                     <label>Jenis Mesin</label>
                     <select class="form-control" name="tipe">
                         <option value="ip" <?php if($edit->tipe == "ip"): ?> selected <?php endif; ?>>IP based</option>
                         <option value="usb" <?php if($edit->tipe == "usb"): ?> selected <?php endif; ?>>USB</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Absen</label>
+                    <select class="form-control" name="grup">
+                        <?php $__currentLoopData = $grup; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($data->id); ?>" <?php if($edit->grup == $data->id): ?> selected <?php endif; ?>><?php echo e($data->text); ?></option>
+                        <<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="form-group ">

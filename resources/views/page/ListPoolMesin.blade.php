@@ -33,6 +33,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nama Mesin Absensi</th>
+                                <th>grup mesin</th>
                                 <th>Sinkronisasi Terakhir</th>
                                 <th>Aksi</th>
                             </tr>
@@ -42,6 +43,7 @@
                                 <tr>
                                     <td>{{$loop->iteration}}</td>
                                     <td>{{$data->name}}</td>
+                                    <td>{{ optional($data->groupOption)->text ?? '-' }}</td>
                                     <td>{{ tsp($data->last_sync)}}</td>
                                     <td>
                                         @if($data->tipe     == "ip")

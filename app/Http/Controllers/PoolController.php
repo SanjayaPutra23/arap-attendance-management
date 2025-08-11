@@ -16,9 +16,9 @@ class PoolController extends Controller
      */
     public function index()
     {
-        $listm = Mesin::all();
+        $list = Mesin::where('grup', 6)->with('groupOption:id,text')->get();
         $pure = Pool::count();
-        return view('page.ListPoolMesin',['list'=> $listm, 'pur'=> $pure]);
+        return view('page.ListPoolMesin',['list'=> $list, 'pur'=> $pure]);
     }
 
     /**

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('css'); ?>
 
 
@@ -42,6 +40,15 @@
                                             <option value="usb">USB</option>
                                         </select>
                                     </div>
+                                     <div class="form-group row">
+                                        <label>Jenis Absen</label>
+                                        <select class="form-control" name="grup">
+                                            <?php $__currentLoopData = $grup; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($data->id); ?>"> <?php echo e($data->text); ?></option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            
+                                        </select>
+                                    </div>
                                     <div class="form-group row">
                                         <label>IP Address</label>
                                         <input class="form-control" type="text" placeholder="Alamat Internet protokol mesin" name="ip" >
@@ -59,6 +66,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nama Mesin Absensi</th>
+                                <th>Grup</th>
                                 <th>Alamat IP</th>
                                 <th>Aksi</th>
                             </tr>
@@ -68,6 +76,7 @@
                                 <tr>
                                     <td><?php echo e($loop->iteration); ?></td>
                                     <td><?php echo e($data->name); ?>(<?php echo e($data->tipe); ?>)</td>
+                                    <td><?php echo e(optional($data->groupOption)->text ?? '-'); ?></td>
                                     <td><?php echo e($data->ip); ?>:<?php echo e($data->port); ?></td>
                                     <td>
                                         <a href="<?php echo e(route('mesin.show', $data->id)); ?>" class="badge badge-info">Check Koneksi</a>
