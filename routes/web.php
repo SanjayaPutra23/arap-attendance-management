@@ -134,3 +134,5 @@ Route::get('/cs/userpdf/{absensi}', [CsController::class,'detailpdf'])->middlewa
 Route::resource('/pol', PolController::class)->middleware(['auth', 'auth.ultraAccess']);
 
 Route::resource('/akademik', AkademikController::class)->middleware(['auth']);
+Route::get('/persepsi/akademik', [AkademikController::class,'persepsi'])->middleware(['auth'])->name('akademik.persepsi');
+Route::post('/persepsi/akademik', [AkademikController::class,'persepsi_new'])->middleware(['auth'])->name('akademik.persepsi.make');

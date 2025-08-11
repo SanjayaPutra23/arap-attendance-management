@@ -15,6 +15,9 @@ class CreatePersepsisTable extends Migration
     {
         Schema::create('persepsis', function (Blueprint $table) {
             $table->id();
+            $table->integer('type');
+            $table->date('tanggal');
+            $table->unsignedBigInteger('id_maker');
             $table->timestamps();
         });
     }

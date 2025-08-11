@@ -7,7 +7,7 @@ use App\Models\DetailAbsen;
 use App\Models\Peserta;
 use App\Models\Pool;
 use App\Models\Pod;
-use App\Models\Setting;
+use App\Models\Persepsi;
 use App\Models\Libur;
 use App\Models\Mesin;
 use Illuminate\Http\Request;
@@ -286,5 +286,19 @@ class AkademikController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function persepsi()
+    { 
+        $listtgl= Pool::query()
+                ->distinct()
+                ->where('mesin_id', '>=', 12)
+                ->pluck('date')
+                ->toArray();
+       // dd($listtgl);
+       $mesin = Mesin::where('grup', 7)->get();
+        $list = Persepsi::all();
+       
+        return view('page.ListPersepsi',compact('list' ,'listtgl', 'mesin'));
     }
 }

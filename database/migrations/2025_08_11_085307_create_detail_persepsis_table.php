@@ -15,6 +15,13 @@ class CreateDetailPersepsisTable extends Migration
     {
         Schema::create('detail_persepsis', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('id_persepsis');
+            $table->integer('sesi');
+            $table->string('tanggal');
+            $table->time('jam');
+            $table->string('name');
+            $table->string('nik');
+            $table->string('alamat');
             $table->timestamps();
         });
     }

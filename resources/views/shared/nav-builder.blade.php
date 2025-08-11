@@ -87,9 +87,9 @@
                 Mesin Absen</a>
         </li>
         <li class="c-sidebar-nav-item">
-            <a class="c-sidebar-nav-link" href="{{ route('absensi.index') }}">
+            <a class="c-sidebar-nav-link" href="{{ route('akademik.persepsi') }}">
                 <i class="cil-fingerprint c-sidebar-nav-icon"></i>
-               Absensi Karyawan</a>
+               Absensi Persamaan Persepsi </a>
         </li>
         <li class="c-sidebar-nav-item">
             <a class="c-sidebar-nav-link" href="{{ route('satpam.index') }}">
