@@ -17,6 +17,7 @@ Use App\Http\Controllers\PolController;
 use App\Http\Controllers\SatpamController;
 use App\Http\Controllers\CsController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\AkademikController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 
@@ -131,3 +132,5 @@ Route::get('/cs/user/{absensi}', [CsController::class,'detail'])->middleware(['a
 Route::get('/cs/userpdf/{absensi}', [CsController::class,'detailpdf'])->middleware(['auth'])->name('absensi.pdf.cs');
 
 Route::resource('/pol', PolController::class)->middleware(['auth', 'auth.ultraAccess']);
+
+Route::resource('/akademik', AkademikController::class)->middleware(['auth']);

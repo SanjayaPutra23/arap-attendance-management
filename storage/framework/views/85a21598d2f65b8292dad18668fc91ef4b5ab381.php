@@ -21,7 +21,7 @@
                 <div class="card">
                     <div class="card-header">
                       <h3 class="float-left">Daftar Mesin Presensi</h3>
-                      <?php if($pur > 10000): ?> 
+                      <?php if($pur > 50000): ?> 
                         <a class="btn btn-outline-danger float-right" href="<?php echo e(route('pur.pool')); ?>" >Purifikasi Pool Data</a>
                         <?php endif; ?>
                     </div>

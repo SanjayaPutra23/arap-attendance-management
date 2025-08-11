@@ -82,7 +82,7 @@
         </ul>
     </li>
         <li class="c-sidebar-nav-item">
-            <a class="c-sidebar-nav-link" href="<?php echo e(route('pool.index')); ?>">
+            <a class="c-sidebar-nav-link" href="<?php echo e(route('akademik.index')); ?>">
                 <i class="cil-devices c-sidebar-nav-icon"></i>
                 Mesin Absen</a>
         </li>

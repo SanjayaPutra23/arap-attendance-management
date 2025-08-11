@@ -23,7 +23,7 @@
                 <div class="card">
                     <div class="card-header">
                       <h3 class="float-left">Daftar Mesin Presensi</h3>
-                      @if($pur > 10000) 
+                      @if($pur > 50000) 
                         <a class="btn btn-outline-danger float-right" href="{{ route('pur.pool') }}" >Purifikasi Pool Data</a>
                         @endif
                     </div>

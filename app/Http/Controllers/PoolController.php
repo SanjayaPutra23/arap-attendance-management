@@ -6,6 +6,8 @@ use App\Models\Mesin;
 use App\Models\Pool;
 use Illuminate\Http\Request;
 use Rats\Zkteco\Lib\ZKTeco;
+    use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PoolController extends Controller
 {
@@ -54,9 +56,9 @@ class PoolController extends Controller
         $zk = new ZKTeco( $pools->ip, $pools->port);
         if($zk->connect()){
             $zk->disconnect();
-            return redirect( route('pool.index'))->with('msg','success-Mesin Terkoneksi');
+            return redirect()->back()->with('msg','success-Mesin Terkoneksi');
         } else {
-            return redirect( route('pool.index'))->with('msg','success-Gagal Mesin Terkoneksi');
+            return redirect()->back()->with('msg','success-Gagal Mesin Terkoneksi');
         }
     }
 
@@ -97,12 +99,130 @@ class PoolController extends Controller
     public function pull($id)
     {
         if ($this->tarik($id)){
-            return redirect( route('pool.index'))->with('msg','success-Data berhasil ditarik');
+            return redirect()->back()->with('msg','success-Data berhasil ditarik');
         } else {
-            return redirect( route('pool.index'))->with('msg','success-Gagal Mesin Terkoneksi');
+            return redirect()->back()->with('msg','success-Gagal Mesin Terkoneksi');
         }
     }
-    private function tarik($id)
+
+
+
+    private function tarik(int $id): bool
+        {
+            $mesin = Mesin::where('tipe', 'ip')->find($id);
+            if (!$mesin) return false;
+
+            $zk = new ZKTeco($mesin->ip, $mesin->port);
+
+            if (!$zk->connect()) {
+                return false;
+            }
+
+            try {
+                $rows = $zk->getAttendance(); // array data dari mesin
+            } finally {
+                $zk->disconnect();
+            }
+
+            if (empty($rows)) {
+                // tidak ada data dari mesin
+                return true;
+            }
+
+            // Ambil cutoff timestamp terakhir untuk mesin ini
+            $lastTs = Pool::where('mesin_id', $id)->max('timestamp');
+            // Jika null, pakai epoch awal
+            $cutoff = $lastTs ? Carbon::parse($lastTs) : Carbon::create(1970,1,1,0,0,0);
+
+            $now = now()->toDateTimeString();
+            $buffer = [];
+
+            // Optional: cegah duplikat di memori (kalau perangkat suka kirim ulang batch lama)
+            // Key = mesin_id|iduser|timestamp|type
+            $seen = [];
+
+            foreach ($rows as $r) {
+                // Pastikan field minimal tersedia
+                if (!isset($r['timestamp'], $r['id'], $r['type'], $r['state'], $r['uid'])) {
+                    continue;
+                }
+
+                // Parse timestamp dari mesin
+                // Format umum ZKTeco: "YYYY-mm-dd HH:ii:ss"
+                try {
+                    $ts = Carbon::parse($r['timestamp']);
+                } catch (\Throwable $e) {
+                    continue; // skip yang tidak valid
+                }
+
+                // Hanya data yang lebih baru dari cutoff
+                if ($ts->lessThanOrEqualTo($cutoff)) {
+                    continue;
+                }
+
+                // Susun kolom sesuai schema lama (string) maupun baru (native)
+                $dateStr = $ts->toDateString();      // "YYYY-mm-dd"
+                $timeStr = $ts->toTimeString();      // "HH:ii:ss"
+                $yearStr = $ts->format('Y');
+                $monthStr= $ts->format('m');
+
+                $record = [
+                    'uid'       => $r['uid'],             // user UID dari mesin
+                    'iduser'    => $r['id'],              // biasanya user id pada device
+                    'state'     => (int) $r['state'],
+                    'year'      => $yearStr,
+                    'month'     => $monthStr,
+                    'date'      => $dateStr,
+                    'time'      => $timeStr,
+                    'timestamp' => $ts->toDateTimeString(),
+                    'type'      => (int) $r['type'],      // 0=in, 1=out (umum)
+                    'mesin_id'  => $id,
+                    'created_at'=> $now,
+                    'updated_at'=> $now,
+                ];
+
+                // Dedup in-memory
+                $k = $id.'|'.$record['iduser'].'|'.$record['timestamp'].'|'.$record['type'];
+                if (isset($seen[$k])) {
+                    continue;
+                }
+                $seen[$k] = true;
+
+                $buffer[] = $record;
+            }
+
+            if (empty($buffer)) {
+                // Tidak ada yang baru
+                return true;
+            }
+
+            // Insert batch (chunk agar aman)
+            DB::beginTransaction();
+            try {
+                foreach (array_chunk($buffer, 1000) as $chunk) {
+                    // Jika sudah pasang UNIQUE index (mesin_id,iduser,timestamp,type),
+                    // ganti baris berikut jadi: Pool::insertOrIgnore($chunk);
+                    Pool::insert($chunk);
+                }
+
+                // Update last_sync pakai data DB terbaru
+                $latest = Pool::where('mesin_id', $id)->max('timestamp');
+                if ($latest) {
+                    $mesin->last_sync = $latest;
+                    $mesin->save();
+                }
+
+                DB::commit();
+                return true;
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                // Log::error('Gagal tarik absen: '.$e->getMessage());
+                return false;
+            }
+        }
+
+
+    private function tarikX($id)
     {
         $poolz = Mesin::where('tipe', "ip")->where('id', $id)->first();
 
@@ -152,7 +272,6 @@ class PoolController extends Controller
             $this->tarik($atd->id);
         }
         return redirect( route('pool.index'))->with('msg','success-Data berhasil ditarik');
-
     }
 
     public function usbupload(Mesin $mesin)
@@ -202,19 +321,19 @@ class PoolController extends Controller
         $lastsync = Pool::where('mesin_id', $id)->orderBy('timestamp', 'DESC')->first();
         $poolz->last_sync = $lastsync->timestamp;
         $poolz->save();
-        return redirect( route('pool.index'))->with('msg','success-Data berhasil diupload');
+        return redirect()->back()->with('msg','success-Data berhasil diupload');
     }
 
     public function purage(){
         $hitung = Pool::all('id')->count();
-        if($hitung > 10000) {
+        if($hitung > 40000) {
              $tgl = date("Y-m-d", strtotime("-3 months"));
         //$tgl = date("Y-m-d", strtotime("2023-06-4"));
         $idp = Pool::where('date', $tgl)->orderby('id', 'DESC')->first('id');
         Pool::where('id','<',$idp->id)->delete();
-        return redirect( route('pool.index'))->with('msg','success-Pool data telah dibersihkan ');
+        return redirect()->back()->with('msg','success-Pool data telah dibersihkan');
         } else {
-            return redirect( route('pool.index'))->with('msg','success-Pool data masih cukup bersih ');
+            return redirect()->back()->with('msg','success-Pool data masih cukup bersih');
         }
     }
 }

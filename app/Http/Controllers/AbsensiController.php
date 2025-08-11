@@ -124,9 +124,14 @@ class AbsensiController extends Controller
     $fromDate = $allDates->first();
     $toDate   = $allDates->last();
 
+    $mesinIds = Mesin::query()
+    ->where('grup', 6)
+    ->pluck('id');
+
     $pools = Pool::query()
         ->whereIn('iduser', $uids)
         ->whereBetween('date', [$fromDate, $toDate]) // OK karena date adalah string Y-m-d
+        ->when($mesinIds->isNotEmpty(), fn($q) => $q->whereIn('mesin_id', $mesinIds))
         ->get(['iduser', 'date', 'type', 'time', 'timestamp']);
 
     // Index-kan: $poolIndex[$uid][$date] = ['in' => 'HH:ii:ss'|'0', 'out' => 'HH:ii:ss'|'0', 'latest_ts' => Carbon]
