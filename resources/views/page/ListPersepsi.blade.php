@@ -73,7 +73,7 @@
                                                 onclick=" if( confirm('anda Yakin?')) { event.preventDefault();
                                                         document.getElementById('delete-option-form-{{$data->id}}').submit()} else{  event.preventDefault(); }">
                                             Hapus</button>
-                                        <form id="delete-option-form-{{$data->id}}" action="{{ route('absensi.destroy', $data->id ) }}" method="POST">
+                                        <form id="delete-option-form-{{$data->id}}" action="{{ route('akademik.persepsi.destroy', $data->id ) }}" method="POST">
                                             @csrf
                                             @method('DELETE')
                                         </form>
