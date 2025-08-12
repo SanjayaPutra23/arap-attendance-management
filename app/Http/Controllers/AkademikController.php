@@ -8,6 +8,8 @@ use App\Models\Peserta;
 use App\Models\Pool;
 use App\Models\Pod;
 use App\Models\Persepsi;
+use App\Models\Setting;
+use App\Models\DetailPersepsi;
 use App\Models\Libur;
 use App\Models\Mesin;
 use Illuminate\Http\Request;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use PDF;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use PhpParser\Node\Expr\New_;
 
 class AkademikController extends Controller
 {
@@ -289,16 +292,185 @@ class AkademikController extends Controller
     }
 
     public function persepsi()
-    { 
-        $listtgl= Pool::query()
-                ->distinct()
-                ->where('mesin_id', '>=', 12)
-                ->pluck('date')
-                ->toArray();
-       // dd($listtgl);
-       $mesin = Mesin::where('grup', 7)->get();
-        $list = Persepsi::all();
+{
+    // Ambil mesin grup 7 sekali saja
+    $mesin = Mesin::where('grup', 7)->get(['id','name']);
+    $mesinIds = $mesin->pluck('id');
+
+    // List tanggal unik dari pools untuk mesin-mesin tersebut, terbaru dulu
+    $listtgl = Pool::query()
+        ->whereIn('mesin_id', $mesinIds)
+        ->select('date')
+        ->distinct()
+        ->orderByDesc('date')   // aman kalau format 'Y-m-d'
+        ->pluck('date')
+        ->toArray();
+
+    // List persepsi + relasi mesin, urut terbaru (opsional tapi biasanya enak dilihat)
+    $list = Persepsi::with('mesin')
+        ->orderByDesc('tanggal')   // hilangkan kalau tak perlu
+        ->get();
+
+    return view('page.ListPersepsi', compact('list', 'listtgl', 'mesin'));
+}
+
+
+    public function persepsi_new(Request $request)
+{
+    $data = $request->validate([
+        'tanggal' => 'required|date', // Y-m-d
+    ]);
+
+    // Ambil semua mesin dalam grup 7
+    $mesinList = Mesin::where('grup', 7)->get(['id','name']);
+    if ($mesinList->isEmpty()) {
+        return redirect()->route('akademik.persepsi')
+            ->with('msg', 'danger-Tidak ada mesin presensi, hubungi admin');
+    }
+    $mesinIds  = $mesinList->pluck('id');
+    $mesinName = $mesinList->pluck('name','id'); // id => name
+
+    // Ambil semua batas sesi 1x
+    $settings = Setting::whereIn('name', [
+        'Sesi1_batas_PersAwal','Sesi1_batas_PersAkhir',
+        'Sesi2_batas_PersAwal','Sesi2_batas_PersAkhir',
+        'Sesi3_batas_PersAwal','Sesi3_batas_PersAkhir',
+        'Sesi4_batas_PersAwal','Sesi4_batas_PersAkhir',
+    ])->pluck('value','name');
+
+    $ranges = [
+        1 => [$settings['Sesi1_batas_PersAwal'] ?? '00:00:00', $settings['Sesi1_batas_PersAkhir'] ?? '00:00:00'],
+        2 => [$settings['Sesi2_batas_PersAwal'] ?? '00:00:00', $settings['Sesi2_batas_PersAkhir'] ?? '00:00:00'],
+        3 => [$settings['Sesi3_batas_PersAwal'] ?? '00:00:00', $settings['Sesi3_batas_PersAkhir'] ?? '00:00:00'],
+        4 => [$settings['Sesi4_batas_PersAwal'] ?? '00:00:00', $settings['Sesi4_batas_PersAkhir'] ?? '00:00:00'],
+    ];
+
+    // Helper: tentukan sesi dari jam
+    $resolveSesi = function (string $t) use ($ranges): ?int {
+        foreach ($ranges as $sesi => [$from, $to]) {
+            if ($t >= $from && $t <= $to) return $sesi;
+        }
+        return null;
+    };
+
+    // Ambil semua punch tanggal itu dari SEMUA mesin grup 7 (sekaligus)
+    $pools = Pool::query()
+        ->where('date', $data['tanggal'])
+        ->whereIn('mesin_id', $mesinIds)
+        ->where(function ($q) use ($ranges) {
+            foreach ($ranges as [$from, $to]) {
+                $q->orWhereBetween('time', [$from, $to]);
+            }
+        })
+        ->orderBy('mesin_id')
+        ->orderBy('time', 'asc') // penting untuk dedup earliest
+        ->get(['mesin_id','iduser','date','time']);
+
+    if ($pools->isEmpty()) {
+        return redirect()->route('akademik.persepsi')
+            ->with('msg', 'danger-Tidak ada data presensi pada tanggal tersebut di database');
+    }
+
+    // Map UID -> Peserta (hindari N+1)
+    $uids = $pools->pluck('iduser')->filter()->unique();
+    $pesertaMap = Peserta::whereIn('uid', $uids)
+        ->get(['uid','name','nik'])
+        ->keyBy('uid');
+
+    // DEDUP: simpan hanya punch paling awal per (mesin_id, uid, sesi)
+    // key = mesin_id|uid|sesi
+    $picked = [];
+    foreach ($pools as $row) {
+        $sesi = $resolveSesi($row->time);
+        if (!$sesi) continue;
+
+        $key = $row->mesin_id.'|'.$row->iduser.'|'.$sesi;
+        if (!isset($picked[$key])) {
+            $picked[$key] = [
+                'mesin_id' => (int) $row->mesin_id,
+                'uid'      => $row->iduser,
+                'date'     => $row->date,
+                'time'     => $row->time,
+                'sesi'     => $sesi,
+            ];
+        }
+        // karena sudah orderBy time asc, yang pertama = paling awal → biarkan
+    }
+
+    if (empty($picked)) {
+        return redirect()->route('akademik.persepsi')
+            ->with('msg', 'danger-Tidak ada punch yang masuk ke rentang sesi');
+    }
+
+    DB::beginTransaction();
+    try {
+        $now = now()->toDateTimeString();
+
+        // Buat 1 record Persepsi untuk SEMUA mesin grup 7
+        // Catatan: kolom 'type' sebelumnya kamu isi id mesin.
+        // Di sini karena agregat grup, isi saja 'type' = 7 (ID grup) atau string "grup-7" sesuai tipe kolommu.
+        $persepsi = new Persepsi();
+        $persepsi->type     = 7; // <-- menandakan Grup 7 (bukan id mesin tunggal)
+        $persepsi->tanggal  = $data['tanggal'];
+        $persepsi->id_maker = Auth::id();
+        $persepsi->save();
+
+        // Siapkan detail
+        $batch = [];
+        foreach ($picked as $rec) {
+            $p = $pesertaMap->get($rec['uid']);
+            $batch[] = [
+                'id_persepsis' => $persepsi->id,
+                'sesi'         => $rec['sesi'],
+                'tanggal'      => $rec['date'],
+                'jam'          => $rec['time'],
+                'name'         => $p->name ?? '',
+                'nik'          => $p->nik  ?? '',
+                // Simpan asal mesin supaya tetap terpisah saat ditampilkan
+                // Jika kolom 'alamat' dipakai untuk ruang/mesin, isi nama/ID mesin di sini:
+                'alamat'       => $rec['mesin_id'],
+                'created_at'   => $now,
+                'updated_at'   => $now,
+            ];
+        }
+//dd($batch);
+        foreach (array_chunk($batch, 1000) as $chunk) {
+            DetailPersepsi::insert($chunk);
+        }
        
-        return view('page.ListPersepsi',compact('list' ,'listtgl', 'mesin'));
+        DB::commit();
+        return redirect()->route('akademik.persepsi')
+            ->with('msg', 'success-Rekap Persamaan Persepsi semua lantai dibuat. Total detail: '.count($batch));
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return redirect()->route('akademik.persepsi')
+            ->with('msg', 'danger-Gagal menambahkan persepsi, karena '.$e->getMessage());
     }
 }
+
+
+    public function detail_persepsi($id){
+        $persepsi = Persepsi::find($id);
+        $rows = DetailPersepsi::where('id_persepsis', $id)
+            ->with('mesin:id,name')        // pastikan relasi ada: belongsTo(Mesin::class, 'alamat' atau 'mesin_id'?)
+            ->orderBy('alamat')          // sesuaikan nama FK ke mesin (mis. 'alamat' kalau itu menyimpan mesin_id)
+            ->orderBy('sesi')
+            ->orderBy('jam')
+            ->get();
+
+        // Map: mesin_id => nama mesin (fallback ke id)
+        $mesinNames = $rows->pluck('mesin.name', 'alamat')->toArray();
+
+        // Group: [mesin_id => [sesi => Collection<rows>]]
+        $grouped = $rows->groupBy('alamat')->map(fn($g) => $g->groupBy('sesi'));
+
+        return view('page.detailPersepsi', [
+            'grouped'    => $grouped,
+            'mesinNames' => $mesinNames,
+            'persepsi'   => $persepsi,
+        ]);
+    }
+
+
+}
+

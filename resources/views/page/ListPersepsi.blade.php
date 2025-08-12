@@ -9,7 +9,7 @@
     <div class="c-subheader px-3">
         <ol class="breadcrumb border-0 m-0">
             <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-            <li class="breadcrumb-item">Persepsi</li>
+            <li class="breadcrumb-item">Daftar Kehadiran</li>
         </ol>
     </div>
 @endsection
@@ -22,7 +22,7 @@
               <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                 <div class="card">
                     <div class="card-header">
-                      <h3 class="float-left">Rekap Presensi Persamaan Psersepsi</h3>
+                      <h3 class="float-left">Rekap Kehadiran Persamaan Persepsi</h3>
                         <button class="btn btn-outline-primary float-right" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Buat Rekap Presensi Baru</button>
                     </div>
                     <div class="card-body">
@@ -32,25 +32,14 @@
                                 <form method="POST" action="{{ route('akademik.persepsi.make') }}">
                                     @csrf
 
-                                    <div class="form-group row ye">
-                                        <label>Mesin</label>
-                                        
-                                        <select  class="form-control" name="thn">
-                                            <option selected disabled>== Pilih ruang persamaan Persepsi  ==</option>
-                                            @foreach($mesin as $data)
-                                                <option value="{{ $data->id }}">{{$data->name}}</option>
-                                            @endforeach
-
-                                        </select>
-                                    </div>
                                     
                                     <div class="form-group row ye">
                                         <label>tanggal</label>
                                         
-                                        <select id="ye" class="form-control" name="thn">
+                                        <select id="ye" class="form-control" name="tanggal">
                                             <option selected disabled>== Silahkan pilih tanggal tersedia ==</option>
                                             @foreach($listtgl as $key => $i)
-                                                <option value="{{ $i }}">{{$i}}</option>
+                                                <option value="{{ $i }}">{{tgl($i)}}</option>
                                             @endforeach
 
                                         </select>
@@ -66,8 +55,7 @@
                             <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Jenis</th>
-                                <th>Bulan </th>
+                                                               
                                 <th>Tanggal </th>
                                 <th>Aksi</th>
                             </tr>
@@ -76,11 +64,10 @@
                             @foreach($list as $data)
                                 <tr>
                                     <td>{{$loop->iteration}}</td>
-                                    <td> {{ $data->type }}</td>
-                                    <td> {{ namabulan($data->bln) }} {{ $data->thn }}</td>
-                                    <td> {{ $data->tgl_mulai }} sampai {{ $data->tgl_selesai }}</td>
+                                   
+                                    <td> {{ tgl($data->tanggal) }}</td>
                                     <td>
-                                        <a class="badge badge-info" href="{{ route('absensi.show', $data->id) }}" >Lihat Absen</a>
+                                        <a class="badge badge-info" href="{{ route('akademik.persepsi.detail', $data->id) }}" >Lihat kehadiran </a>
                                         <a class="badge badge-success" href="{{ route('absensi.rekap', $data->id) }}" >Lihat Rekap Absen</a>
                                         <button class="badge badge-danger"
                                                 onclick=" if( confirm('anda Yakin?')) { event.preventDefault();
