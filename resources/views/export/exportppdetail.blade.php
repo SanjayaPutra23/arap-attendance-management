@@ -2,24 +2,24 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<table>
+<table border="1" style="border-collapse: collapse;">
     <thead>
         <tr>
-            <th colspan="4">Tanggal : <strong>  {{ tgl($persepsi->tanggal) }} </strong></th>
+            <th colspan="4" style="text-align: center; font-size: 14px; border: 1px solid black;">Kehadiran Persamaam Persepsi Tanggal :&nbsp; <strong>  {{ tgl($persepsi->tanggal) }} </strong></th>
             
         </tr>
         <tr>
-            <th style="width:60px;">No</th>
-            <th>Nama</th>
-            <th>NIK</th>
-            <th>Jam</th>
+            <th style="width:60px; border: 1px solid black;">No</th>
+            <th style="border: 1px solid black;">Nama</th>
+            <th style="border: 1px solid black;">NIK</th>
+            <th style="border: 1px solid black;">Jam</th>
         </tr>
     </thead>
     <tbody>
     @forelse($grouped as $mesinId => $sessions)
         {{-- Header Mesin --}}
         <tr>
-            <td colspan="4"><strong>{{ $mesinNames[$mesinId] ?? 'Mesin '.$mesinId }}</strong></td>
+            <td colspan="4" style="border: 1px solid black;"><strong>{{ $mesinNames[$mesinId] ?? 'Mesin '.$mesinId }}</strong></td>
         </tr>
 
         @foreach($sessions as $sesi => $rows)
@@ -37,18 +37,18 @@
 
             {{-- Header Sesi --}}
             <tr>
-                <td colspan="4"><em>{{ $label }}</em></td>
+                <td colspan="4" style="border: 1px solid black;"><em>{{ $label }}</em></td>
             </tr>
 
             @php $no = 1; @endphp
             @foreach($rows as $row)
                 <tr>
-                    <td>{{ $no++ }}</td>
-                    <td>{{ $row->name }}</td>
-                    <td>{{ $row->nik }}</td>
-                    <td  @if($limit && $row->jam > $limit) 
-                style="background-color: #f8d7da; color: #842029;" 
-            @endif>{{ $row->jam }}</td> {{-- Hapus </badge> yang nyasar --}}
+                    <td style="border: 1px solid black;">{{ $no++ }}</td>
+                    <td style="border: 1px solid black;">{{ $row->name }}</td>
+                    <td style="border: 1px solid black;">{{ $row->nik }}</td>
+                    <td style="border: 1px solid black; @if($limit && $row->jam > $limit) 
+               background-color: #f8d7da; color: #842029;
+            @endif" >{{ $row->jam }}</td> {{-- Hapus </badge> yang nyasar --}}
                 </tr>
             @endforeach
         @endforeach
