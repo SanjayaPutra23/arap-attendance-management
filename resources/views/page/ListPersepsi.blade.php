@@ -31,10 +31,13 @@
                             <div class="card card-body">
                                 <form method="POST" action="{{ route('akademik.persepsi.make') }}">
                                     @csrf
+                                        <div class="form-group row">
+                                            <label>Jika tanggal yang diinginkan tidak tersedia, silahkan Sinkronkan data dari <a class="badge badge-success" href="{{ route('akademik.index') }}" >Mesin Absen </a> </label>
+                                            </div>
 
                                     
                                     <div class="form-group row ye">
-                                        <label>tanggal</label>
+                                        <label>Tanggal Persamaan Persepsi</label>
                                         
                                         <select id="ye" class="form-control" name="tanggal">
                                             <option selected disabled>== Silahkan pilih tanggal tersedia ==</option>
@@ -43,6 +46,7 @@
                                             @endforeach
 
                                         </select>
+                                        
                                     </div>
                                     
 

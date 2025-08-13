@@ -72,7 +72,7 @@
         <ul class="c-sidebar-nav-dropdown-items">
             <li class="c-sidebar-nav-item">
                 <a class="c-sidebar-nav-link" href="<?php echo e(route('setting.index')); ?>">
-                    <span class="cil-clock c-sidebar-nav-icon"> </span>Setting Jam kerja</a>
+                    <span class="cil-clock c-sidebar-nav-icon"> </span>Setting Batas Jam</a>
             </li>
             <li class="c-sidebar-nav-item">
                 <a class="c-sidebar-nav-link" href="<?php echo e(route('libur.index')); ?>">
@@ -91,17 +91,7 @@
                 <i class="cil-fingerprint c-sidebar-nav-icon"></i>
                Absensi Persamaan Persepsi </a>
         </li>
-        <li class="c-sidebar-nav-item">
-            <a class="c-sidebar-nav-link" href="<?php echo e(route('satpam.index')); ?>">
-                <i class="cil-fingerprint c-sidebar-nav-icon"></i>
-                Absensi Satpam</a>
-        </li>
-        <li class="c-sidebar-nav-item">
-            <a class="c-sidebar-nav-link" href="<?php echo e(route('cs.index')); ?>">
-                <i class="cil-fingerprint c-sidebar-nav-icon"></i>
-                Absensi CS</a>
-        </li>
-
+        
     <?php endif; ?>
       
 </ul>
