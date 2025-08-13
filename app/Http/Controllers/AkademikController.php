@@ -298,21 +298,25 @@ class AkademikController extends Controller
     public function persepsi()
 {
     // Ambil mesin grup 7 sekali saja
-    $mesin = Mesin::where('grup', 7)->get(['id','name']);
+    $mesin = Mesin::where('grup', 7)->get(['id', 'name']);
     $mesinIds = $mesin->pluck('id');
 
-    // List tanggal unik dari pools untuk mesin-mesin tersebut, terbaru dulu
+    // Ambil tanggal yang sudah dipakai di persepsis
+    $usedDates = Persepsi::pluck('tanggal');
+    //dd($usedDates);
+    // List tanggal unik dari pools untuk mesin-mesin tersebut, terbaru dulu, exclude yang sudah dipakai
     $listtgl = Pool::query()
         ->whereIn('mesin_id', $mesinIds)
+        ->whereNotIn('date', $usedDates) // filter yang belum dipakai
         ->select('date')
         ->distinct()
-        ->orderByDesc('date')   // aman kalau format 'Y-m-d'
+        ->orderByDesc('date')
         ->pluck('date')
         ->toArray();
 
-    // List persepsi + relasi mesin, urut terbaru (opsional tapi biasanya enak dilihat)
+    // List persepsi + relasi mesin, urut terbaru
     $list = Persepsi::with('mesin')
-        ->orderByDesc('tanggal')   // hilangkan kalau tak perlu
+        ->orderByDesc('tanggal')
         ->get();
 
     return view('page.ListPersepsi', compact('list', 'listtgl', 'mesin'));
