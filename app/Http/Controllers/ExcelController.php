@@ -549,7 +549,7 @@ class ExcelController extends Controller
         // Group: [mesin_id => [sesi => Collection<rows>]]
         $grouped = $rows->groupBy('alamat')->map(fn($g) => $g->groupBy('sesi'));
 
-      return Excel::download(new PPdetailExport($grouped, $mesinNames), 'Kehadiran_Persamaan_Persepsi_'.tgl($persepsi->tanggal).'.xlsx');
+      return Excel::download(new PPdetailExport($grouped, $mesinNames, $persepsi), 'Kehadiran_Persamaan_Persepsi_'.tgl($persepsi->tanggal).'.xlsx');
         
     }
 

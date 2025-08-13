@@ -291,7 +291,7 @@ class AkademikController extends Controller
         $persepsi = Persepsi::find($id);
         DetailPersepsi::where('id_persepsis', $id)->delete();
         $persepsi->delete();
-        return back()->with('msg', 'success-berhasil menghapus rekap persamaanpersepsi');
+        return back()->with('msg', 'success-berhasil menghapus rekap persamaan persepsi');
         
     }
 

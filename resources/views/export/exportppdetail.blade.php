@@ -5,6 +5,10 @@
 <table>
     <thead>
         <tr>
+            <th colspan="4">Tanggal : <strong>  {{ tgl($persepsi->tanggal) }} </strong></th>
+            
+        </tr>
+        <tr>
             <th style="width:60px;">No</th>
             <th>Nama</th>
             <th>NIK</th>
