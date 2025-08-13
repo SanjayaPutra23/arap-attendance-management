@@ -68,7 +68,6 @@
                                     <td> {{ tgl($data->tanggal) }}</td>
                                     <td>
                                         <a class="badge badge-info" href="{{ route('akademik.persepsi.detail', $data->id) }}" >Lihat kehadiran </a>
-                                        <a class="badge badge-success" href="{{ route('absensi.rekap', $data->id) }}" >Lihat Rekap Absen</a>
                                         <button class="badge badge-danger"
                                                 onclick=" if( confirm('anda Yakin?')) { event.preventDefault();
                                                         document.getElementById('delete-option-form-{{$data->id}}').submit()} else{  event.preventDefault(); }">

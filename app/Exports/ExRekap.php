@@ -17,7 +17,7 @@ class ExRekap implements FromView, ShouldAutoSize
         $this->tgllist = $tgllist;
 
     }
-
+  
     public function view(): View
     {
         $list = $this->detailArray;

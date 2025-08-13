@@ -6,9 +6,12 @@ use App\Exports\ExAbsen;
 use App\Exports\ExRekap;
 use App\Exports\ExDetail;
 use App\Exports\ExDetailS;
+use App\Exports\PPdetailExport;
 use App\Models\Absensi;
 use App\Models\DetailAbsen;
 use App\Models\Peserta;
+use App\Models\Persepsi;
+use App\Models\DetailPersepsi;
 use App\Models\Setting;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -529,6 +532,25 @@ class ExcelController extends Controller
         $nama = $peserta[0]."_".$absen->type."_".$absen->bln."_".$absen->thn;
         //dd($absen);
         return Excel::download(new ExDetailS($detailArray, $absen), 'Detail_Satpam_'.$nama.'.xlsx');
+    }
+
+    public function detailPP($id){
+        $persepsi = Persepsi::find($id);
+        $rows = DetailPersepsi::where('id_persepsis', $id)
+            ->with('mesin:id,name')        // pastikan relasi ada: belongsTo(Mesin::class, 'alamat' atau 'mesin_id'?)
+            ->orderBy('alamat')          // sesuaikan nama FK ke mesin (mis. 'alamat' kalau itu menyimpan mesin_id)
+            ->orderBy('sesi')
+            ->orderBy('jam')
+            ->get();
+
+        // Map: mesin_id => nama mesin (fallback ke id)
+        $mesinNames = $rows->pluck('mesin.name', 'alamat')->toArray();
+
+        // Group: [mesin_id => [sesi => Collection<rows>]]
+        $grouped = $rows->groupBy('alamat')->map(fn($g) => $g->groupBy('sesi'));
+
+      return Excel::download(new PPdetailExport($grouped, $mesinNames), 'Kehadiran_Persamaan_Persepsi_'.tgl($persepsi->tanggal).'.xlsx');
+        
     }
 
 }

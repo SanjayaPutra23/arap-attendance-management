@@ -468,10 +468,19 @@ class AkademikController extends Controller
         // Group: [mesin_id => [sesi => Collection<rows>]]
         $grouped = $rows->groupBy('alamat')->map(fn($g) => $g->groupBy('sesi'));
 
+        // Ambil semua batas sesi 1x
+        $settings = Setting::whereIn('name', [
+            'sesi1_batas',
+            'sesi2_batas',
+            'sesi3_batas',
+            'sesi4_batas'
+        ])->pluck('value','name');
+           // dd($settings);
         return view('page.detailPersepsi', [
             'grouped'    => $grouped,
             'mesinNames' => $mesinNames,
             'persepsi'   => $persepsi,
+            'settings'   => $settings,
         ]);
     }
 

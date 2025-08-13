@@ -116,6 +116,7 @@ Route::prefix('exel')->name('exel.')->middleware(['auth'])->group( function (){
     Route::get('/rekaphits/{absensi}',[ExcelController::class,'rekap2S'])->name('rekaphit_satpam');
     Route::get('/detail/{absensi}',[ExcelController::class,'detailK'])->name('detailk');
     Route::get('/details/{absensi}',[ExcelController::class,'detailS'])->name('details');
+    Route::get('/detailpersepsi/{absensi}',[ExcelController::class,'detailPP'])->name('detailpersepsi');
 
 });
 Route::resource('/setting',SettingController::class)->middleware(['auth']);

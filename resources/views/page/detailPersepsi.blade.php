@@ -22,7 +22,7 @@
                       <div class="card">
                           <div class="card-header">
                               <h3 class="float-left">Kehadiran Persamaan Persepsi tanggal {{ tgl($persepsi->tanggal) }}</h3>
-                              <a class="btn btn-outline-primary float-right" href="#">Download Absensi</a>
+                              <a class="btn btn-outline-primary float-right" href="{{ route('exel.detailpersepsi', $persepsi->id) }}">Download Absensi</a>
                           </div>
                           <div class="card-body">
 
@@ -53,16 +53,16 @@
                                             
                                         @switch($sesi)
                                             @case(1)
-                                                Sesi 1 (08.00 - 09.40)
+                                                Sesi 1 (08.00 - 09.40) @php $limit = $settings['sesi1_batas']; @endphp
                                                 @break
                                             @case(2)
-                                                Sesi 2 (10.00 - 11.40)
+                                                Sesi 2 (10.00 - 11.40) @php $limit = $settings['sesi2_batas']; @endphp
                                                 @break
                                             @case(3)
-                                               Sesi 3 (13.00 - 14.40)
+                                               Sesi 3 (13.00 - 14.40) @php $limit = $settings['sesi3_batas']; @endphp
                                                 @break
                                             @case(4)
-                                               Sesi 4 (15.00 - 16.40)
+                                               Sesi 4 (15.00 - 16.40) @php $limit = $settings['sesi4_batas']; @endphp
                                                 @break
                                             @default
                                                 Hubungi Admin
@@ -76,7 +76,7 @@
                                         <td>{{ $no++ }}</td>
                                         <td>{{ $row->name }}</td>
                                         <td>{{ $row->nik }}</td>
-                                        <td>{{ $row->jam }}</td>
+                                        <td @if($row->jam >= $limit) style="color: white; background-color:#FF0000;" @endif>{{ $row->jam }}</badge></td>
                                         </tr>
                                     @endforeach
                                     @endforeach
