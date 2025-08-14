@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use Hamcrest\Core\Set;
 use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Gate;
 
 class SettingController extends Controller
 {
@@ -15,7 +16,15 @@ class SettingController extends Controller
      */
     public function index()
     {
-        $seting = Setting::paginate(10);
+        if (Gate::allows('umum')) {
+                $seting = Setting::where('grup', 6)->paginate(10);
+            } else if (Gate::allows('akademik')) {
+                 $seting = Setting::where('grup', 7)->paginate(10);
+            }
+            else{
+               $seting = Setting::paginate(10);  
+            }
+        
         return view('page.settingList', ['seting'=> $seting]);
     }
 

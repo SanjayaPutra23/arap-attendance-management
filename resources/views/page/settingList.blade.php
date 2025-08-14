@@ -47,6 +47,9 @@
                                   @can('umum')
                                   <a href="{{ route('setting.edit', $data->id) }}" class="btn btn-block btn-primary">Ubah Setting</a>
                                @endcan
+                                @can('akademik')
+                                  <a href="{{ route('setting.edit', $data->id) }}" class="btn btn-block btn-primary">Ubah Setting</a>
+                               @endcan
                                       @can('ultraman')
                                       <button class="btn btn-block btn-danger"
                                               onclick="event.preventDefault();

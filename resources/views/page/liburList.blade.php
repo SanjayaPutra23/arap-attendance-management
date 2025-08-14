@@ -29,6 +29,10 @@
                         <a href="{{ route('libur.add') }}" class="btn btn-md btn-success ">Tarik Data Libur Nasional</a>
                         </div>
                             @endcan   
+                             @can('akademik')
+                        <div class="btn-group float-right" role="group" aria-label="Button group with nested dropdown">
+                        <a href="{{ route('libur.create') }}" class="btn btn-md btn-info">Tambah Libur</a>
+                        @endcan
 
                     </div>
                     <div class="card-body">
