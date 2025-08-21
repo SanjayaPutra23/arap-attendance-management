@@ -139,3 +139,5 @@ Route::get('/persepsi/akademik', [AkademikController::class,'persepsi'])->middle
 Route::post('/persepsi/akademik', [AkademikController::class,'persepsi_new'])->middleware(['auth'])->name('akademik.persepsi.make');
 Route::get('/detail/persepsi/akademik/{id}', [AkademikController::class,'detail_persepsi'])->middleware(['auth'])->name('akademik.persepsi.detail');
 Route::delete('/persepsi/akademik/{id}', [AkademikController::class,'destroy'])->middleware(['auth'])->name('akademik.persepsi.destroy');
+Route::get('/akademik/pull/{id}',[AkademikController::class,'pull'])->middleware(['auth'])->name('akademik.pull');
+Route::get('/akademik/pur',[AkademikController::class,'purage'] )->middleware(['auth'])->name('pur.akademik');

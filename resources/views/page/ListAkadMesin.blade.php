@@ -47,7 +47,7 @@
                                     <td>{{ tsp($data->last_sync)}}</td>
                                     <td>
                                         @if($data->tipe     == "ip")
-                                        <a href="{{ route('pool.show', $data->id) }}" class="badge badge-info">Check Koneksi</a>
+                                        <a href="{{ route('akademik.show', $data->id) }}" class="badge badge-info">Check Koneksi</a>
                                         <a href="{{ route('pull.pool', $data->id) }}" class="badge badge-warning">Sinkronkan Data</a>
                                         @else
                                             <a href="{{ route('pool.usb', $data->id) }}" class="badge badge-success">upload dari USB</a>

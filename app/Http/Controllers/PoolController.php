@@ -222,7 +222,8 @@ class PoolController extends Controller
         }
 
 
-    private function tarikX($id)
+   
+        private function tarikX($id)
     {
         $poolz = Mesin::where('tipe', "ip")->where('id', $id)->first();
 

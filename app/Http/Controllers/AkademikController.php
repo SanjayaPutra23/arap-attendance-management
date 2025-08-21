@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Absensi;
 use App\Models\DetailAbsen;
 use App\Models\Peserta;
-use App\Models\Pool;
+use App\Models\Akapool;
 use App\Models\Pod;
 use App\Models\Persepsi;
 use App\Models\Setting;
@@ -16,9 +16,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PDF;
+use Rats\Zkteco\Lib\ZKTeco;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use PhpParser\Node\Expr\New_;
+use Facade\FlareClient\Api;
 
 class AkademikController extends Controller
 {
@@ -30,7 +31,7 @@ class AkademikController extends Controller
     public function index()
     {
         $list = Mesin::where('grup', 7)->with('groupOption:id,text')->get();
-        $pure = Pool::count();
+        $pure = Akapool::count();
         return view('page.ListAkadMesin',['list'=> $list, 'pur'=> $pure]);
     }
     /**
@@ -129,7 +130,7 @@ class AkademikController extends Controller
     ->where('grup', 7)
     ->pluck('id');
 
-    $pools = Pool::query()
+    $pools = Akapool::query()
         ->whereIn('iduser', $uids)
         ->whereBetween('date', [$fromDate, $toDate]) // OK karena date adalah string Y-m-d
         ->when($mesinIds->isNotEmpty(), fn($q) => $q->whereIn('mesin_id', $mesinIds))
@@ -166,7 +167,7 @@ class AkademikController extends Controller
 
     // Latest timestamp global dari Pool (untuk logika $over)
     $latestPoolTs = optional(
-        Pool::query()->latest('id')->first()
+        Akapool::query()->latest('id')->first()
     )->timestamp;
 
     // 8) Prefetch Pod (hak) → set dengan key "userId#tanggal"
@@ -254,7 +255,14 @@ class AkademikController extends Controller
      */
     public function show($id)
     {
-        //
+        $pools = Mesin::where('tipe', "ip")->where('id', $id)->first();
+        $zk = new ZKTeco( $pools->ip, $pools->port);
+        if($zk->connect()){
+            $zk->disconnect();
+            return redirect()->back()->with('msg','success-Mesin Terkoneksi');
+        } else {
+            return redirect()->back()->with('msg','success-Gagal Mesin Terkoneksi');
+        }
     }
 
     /**
@@ -305,7 +313,7 @@ class AkademikController extends Controller
     $usedDates = Persepsi::pluck('tanggal');
     //dd($usedDates);
     // List tanggal unik dari pools untuk mesin-mesin tersebut, terbaru dulu, exclude yang sudah dipakai
-    $listtgl = Pool::query()
+    $listtgl = Akapool::query()
         ->whereIn('mesin_id', $mesinIds)
         ->whereNotIn('date', $usedDates) // filter yang belum dipakai
         ->select('date')
@@ -362,7 +370,7 @@ class AkademikController extends Controller
     };
 
     // Ambil semua punch tanggal itu dari SEMUA mesin grup 7 (sekaligus)
-    $pools = Pool::query()
+    $pools = Akapool::query()
         ->where('date', $data['tanggal'])
         ->whereIn('mesin_id', $mesinIds)
         ->where(function ($q) use ($ranges) {
@@ -486,6 +494,143 @@ class AkademikController extends Controller
             'persepsi'   => $persepsi,
             'settings'   => $settings,
         ]);
+    }
+
+
+public function pull($id)
+    {
+        if ($this->tarik($id)){
+            return redirect()->back()->with('msg','success-Data berhasil ditarik');
+        } else {
+            return redirect()->back()->with('msg','success-Gagal Mesin Terkoneksi');
+        }
+    }
+
+private function tarik(int $id): bool
+        {
+            $mesin = Mesin::where('tipe', 'ip')->find($id);
+            if (!$mesin) return false;
+
+            $zk = new ZKTeco($mesin->ip, $mesin->port);
+
+            if (!$zk->connect()) {
+                return false;
+            }
+
+            try {
+                $rows = $zk->getAttendance(); // array data dari mesin
+            } finally {
+                $zk->disconnect();
+            }
+
+            if (empty($rows)) {
+                // tidak ada data dari mesin
+                return true;
+            }
+
+            // Ambil cutoff timestamp terakhir untuk mesin ini
+            $lastTs = Akapool::where('mesin_id', $id)->max('timestamp');
+            // Jika null, pakai epoch awal
+            $cutoff = $lastTs ? Carbon::parse($lastTs) : Carbon::create(1970,1,1,0,0,0);
+
+            $now = now()->toDateTimeString();
+            $buffer = [];
+
+            // Optional: cegah duplikat di memori (kalau perangkat suka kirim ulang batch lama)
+            // Key = mesin_id|iduser|timestamp|type
+            $seen = [];
+
+            foreach ($rows as $r) {
+                // Pastikan field minimal tersedia
+                if (!isset($r['timestamp'], $r['id'], $r['type'], $r['state'], $r['uid'])) {
+                    continue;
+                }
+
+                // Parse timestamp dari mesin
+                // Format umum ZKTeco: "YYYY-mm-dd HH:ii:ss"
+                try {
+                    $ts = Carbon::parse($r['timestamp']);
+                } catch (\Throwable $e) {
+                    continue; // skip yang tidak valid
+                }
+
+                // Hanya data yang lebih baru dari cutoff
+                if ($ts->lessThanOrEqualTo($cutoff)) {
+                    continue;
+                }
+
+                // Susun kolom sesuai schema lama (string) maupun baru (native)
+                $dateStr = $ts->toDateString();      // "YYYY-mm-dd"
+                $timeStr = $ts->toTimeString();      // "HH:ii:ss"
+                $yearStr = $ts->format('Y');
+                $monthStr= $ts->format('m');
+
+                $record = [
+                    'uid'       => $r['uid'],             // user UID dari mesin
+                    'iduser'    => $r['id'],              // biasanya user id pada device
+                    'state'     => (int) $r['state'],
+                    'year'      => $yearStr,
+                    'month'     => $monthStr,
+                    'date'      => $dateStr,
+                    'time'      => $timeStr,
+                    'timestamp' => $ts->toDateTimeString(),
+                    'type'      => (int) $r['type'],      // 0=in, 1=out (umum)
+                    'mesin_id'  => $id,
+                    'created_at'=> $now,
+                    'updated_at'=> $now,
+                ];
+
+                // Dedup in-memory
+                $k = $id.'|'.$record['iduser'].'|'.$record['timestamp'].'|'.$record['type'];
+                if (isset($seen[$k])) {
+                    continue;
+                }
+                $seen[$k] = true;
+
+                $buffer[] = $record;
+            }
+
+            if (empty($buffer)) {
+                // Tidak ada yang baru
+                return true;
+            }
+
+            // Insert batch (chunk agar aman)
+            DB::beginTransaction();
+            try {
+                foreach (array_chunk($buffer, 1000) as $chunk) {
+                    // Jika sudah pasang UNIQUE index (mesin_id,iduser,timestamp,type),
+                    // ganti baris berikut jadi: Pool::insertOrIgnore($chunk);
+                    Akapool::insert($chunk);
+                }
+
+                // Update last_sync pakai data DB terbaru
+                $latest = Akapool::where('mesin_id', $id)->max('timestamp');
+                if ($latest) {
+                    $mesin->last_sync = $latest;
+                    $mesin->save();
+                }
+
+                DB::commit();
+                return true;
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                // Log::error('Gagal tarik absen: '.$e->getMessage());
+                return false;
+            }
+        }
+
+    public function purage(){
+        $hitung = Akapool::all('id')->count();
+        if($hitung > 40000) {
+             $tgl = date("Y-m-d", strtotime("-3 months"));
+        //$tgl = date("Y-m-d", strtotime("2023-06-4"));
+        $idp = Akapool::where('date', $tgl)->orderby('id', 'DESC')->first('id');
+        Akapool::where('id','<',$idp->id)->delete();
+        return redirect()->back()->with('msg','success-Pool data telah dibersihkan');
+        } else {
+            return redirect()->back()->with('msg','success-Pool data masih cukup bersih');
+        }
     }
 
 
