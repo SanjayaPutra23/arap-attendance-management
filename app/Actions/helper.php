@@ -186,67 +186,86 @@ if(!function_exists('tilPun')){
     }
 
     if(!function_exists('sendWAtest')){
-        Function sendWATest($telp){
-        
+        function sendWATest($telp){
+            $apiKey = config('services.whatsapp.api_key', env('WA_API_KEY', ''));
+            $sender = config('services.whatsapp.sender', env('WA_SENDER_NUMBER', ''));
+            $url    = config('services.whatsapp.url', env('WA_GATEWAY_URL', 'http://api.flarology.id/send-message'));
+
             $data = [
-                'api_key' => 'h9sXwTb7euBgLQTiWKg0FA2QwYJY05',
-                'sender'  => '6285156815086',
-                'number'  => '6282219199300',
-                'message' => "Selamat Datang di FK UGJ, Terimakasih Telah Mengaktifkan Notifikasi WA anda. -Ini adalah pesan Otomatis, Mohon tidak membalas pesan ini"
+                'api_key' => $apiKey,
+                'sender'  => $sender,
+                'number'  => $telp ?: '6282219199300',
+                'message' => "Notifikasi Presensi ARAP SPPG Kalisapu."
             ];
             $curl = curl_init();
-                                                            
-                                                            curl_setopt_array($curl, array(
-                                                              CURLOPT_URL => 'http://api.flarology.my.id/send-message',
-                                                              CURLOPT_RETURNTRANSFER => true,
-                                                              CURLOPT_ENCODING => '',
-                                                              CURLOPT_MAXREDIRS => 10,
-                                                              CURLOPT_TIMEOUT => 0,
-                                                              CURLOPT_FOLLOWLOCATION => true,
-                                                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                                              CURLOPT_CUSTOMREQUEST => 'POST',
-                                                              CURLOPT_POSTFIELDS => json_encode($data),
-                                                              CURLOPT_HTTPHEADER => array(
-                                                                'Content-Type: application/json'
-                                                              ),
-                                                            ));
-                                                            
-                                                            $response = curl_exec($curl);
-                                                            
-                                                            curl_close($curl);
-                                                            echo $response;
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 5,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode($data),
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json'
+                ),
+            ));
+            
+            $response = curl_exec($curl);
+            curl_close($curl);
+            return $response;
         }
-        }
+    }
 
-        if(!function_exists('sendWA')){
-            Function sendWA($telp, $msg){
-        
-                $data = [
-                    'api_key' => 'h9sXwTb7euBgLQTiWKg0FA2QwYJY05',
-                    'sender'  => '6285156815086',
-                    'number'  => '62'.$telp,
-                    'message' => $msg
-                ];
-                $curl = curl_init();
-                curl_setopt_array($curl, array(
-                        CURLOPT_URL => 'http://api.flarology.my.id/send-message',
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_ENCODING => '',
-                        CURLOPT_MAXREDIRS => 10,
-                        CURLOPT_TIMEOUT => 0,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                        CURLOPT_CUSTOMREQUEST => "POST",
-                        CURLOPT_POSTFIELDS => json_encode($data),
-                           CURLOPT_HTTPHEADER => array(
-                           'Content-Type: application/json'
-                           ),
-                ));
-        
-                $response = curl_exec($curl);
-        
-                curl_close($curl);
-                return $response;
-                //return true;
-            }
+    if(!function_exists('sendWA')){
+        function sendWA($telp, $msg){
+            $apiKey = config('services.whatsapp.api_key', env('WA_API_KEY', ''));
+            $sender = config('services.whatsapp.sender', env('WA_SENDER_NUMBER', ''));
+            $url    = config('services.whatsapp.url', env('WA_GATEWAY_URL', 'http://api.flarology.id/send-message'));
+
+            $data = [
+                'api_key' => $apiKey,
+                'sender'  => $sender,
+                'number'  => '62'.$telp,
+                'message' => $msg
+            ];
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 5,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "POST",
+                CURLOPT_POSTFIELDS => json_encode($data),
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json'
+                ),
+            ));
+    
+            $response = curl_exec($curl);
+            curl_close($curl);
+            return $response;
         }
+    }
+
+if(!function_exists('formatDivisi')) {
+    function formatDivisi($jabatan)
+    {
+        if (empty($jabatan)) {
+            return '-';
+        }
+        $lower = strtolower(trim($jabatan));
+        if (in_array($lower, ['scurity', 'security', 'keamanan', 'satpam'])) {
+            return 'Keamanan';
+        }
+        if ($lower === 'kebersihan' || $lower === 'cs') {
+            return 'Kebersihan';
+        }
+        return ucfirst($lower);
+    }
+}

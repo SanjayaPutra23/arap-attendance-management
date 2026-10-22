@@ -23,12 +23,19 @@ class StorePesertaRequest extends FormRequest
      */
     public function rules()
     {
+        if ($this->routeIs('admin.peserta.*') || $this->has('type')) {
+            return [
+                'name' => 'required|max:255',
+                'nik' => 'required|max:255',
+                'type' => 'required|in:Relawan',
+                'jabatan' => 'required|in:Ompreng,Persiapan,Pengolahan,Pemorsian,Keamanan',
+            ];
+        }
+
         return [
             'name' => 'required|max:255',
-            
             'nik' => 'required|max:255',
             'jabatan' => 'required|max:255',
-            
         ];
     }
 }

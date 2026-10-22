@@ -59,15 +59,25 @@ class MesinController extends Controller
      */
     public function show(Mesin $mesin)
     {
-        $zk = new ZKTeco( $mesin->ip, $mesin->port);
-        if($zk->connect()){
-            //$user = $zk->getUser();
-            $zk->disconnect();
+        if (!extension_loaded('sockets') && !function_exists('socket_create')) {
+            $iniPath = php_ini_loaded_file() ?: 'php.ini';
+            return redirect(route('mesin.index'))->with('msg', 'danger-Ekstensi PHP sockets belum aktif di server. File konfigurasi aktif: ' . $iniPath . '. Pastikan extension=sockets aktif pada file tersebut dan server telah di-restart.');
+        }
 
-            ///dd($user);
-            return redirect( route('mesin.index'))->with('msg','success-Mesin Terkoneksi');
-        } else {
-            return redirect( route('mesin.index'))->with('msg','success-Gagal Mesin Terkoneksi');
+        if (empty($mesin->ip) || empty($mesin->port)) {
+            return redirect(route('mesin.index'))->with('msg', 'danger-Alamat IP atau Port mesin absensi belum dikonfigurasi dengan benar.');
+        }
+
+        try {
+            $zk = new ZKTeco($mesin->ip, $mesin->port);
+            if ($zk->connect()) {
+                $zk->disconnect();
+                return redirect(route('mesin.index'))->with('msg', 'success-Mesin Terkoneksi (' . $mesin->ip . ':' . $mesin->port . ')');
+            } else {
+                return redirect(route('mesin.index'))->with('msg', 'danger-Gagal menghubungkan ke mesin absensi (' . $mesin->ip . ':' . $mesin->port . '). Pastikan perangkat menyala dan berada dalam satu jaringan.');
+            }
+        } catch (\Throwable $e) {
+            return redirect(route('mesin.index'))->with('msg', 'danger-Terjadi kendala saat memeriksa koneksi mesin: ' . $e->getMessage());
         }
     }
 

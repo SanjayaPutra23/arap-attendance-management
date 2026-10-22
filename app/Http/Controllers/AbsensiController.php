@@ -28,9 +28,59 @@ class AbsensiController extends Controller
     {
         $year = Pool::select('year')->distinct()->get();
         $month = Pool::select('month')->distinct()->get();
-        //dd($month);
-        $list = Absensi::where('peg', '1')->get();
-        return view('page.ListAbsensi', ["list" => $list, "year"=> $year, "month"=> $month]);
+        $list = Absensi::where('peg', '1')->orderBy('id', 'desc')->get();
+        return view('page.ListAbsensi', [
+            "list" => $list,
+            "year" => $year,
+            "month" => $month,
+            "divisi" => null,
+            "pageTitle" => 'Rekap Presensi Relawan',
+            "breadcrumb" => 'Absensi Relawan'
+        ]);
+    }
+
+    public function divisiIndex($divisi)
+    {
+        $divisi = strtolower($divisi);
+        $validDivisi = ['persiapan', 'pengolahan', 'pemorsian', 'distribusi', 'ompreng', 'keamanan', 'kebersihan'];
+        if (!in_array($divisi, $validDivisi)) {
+            return redirect()->route('absensi.index')->with('msg', 'danger-Divisi tidak ditemukan');
+        }
+
+        $year = Pool::select('year')->distinct()->get();
+        $month = Pool::select('month')->distinct()->get();
+        $list = Absensi::where('peg', '1')->orderBy('id', 'desc')->get();
+        $displayDivisi = formatDivisi($divisi);
+        $pageTitle = 'Absensi ' . $displayDivisi;
+        $breadcrumb = 'Absensi ' . $displayDivisi;
+
+        return view('page.ListAbsensi', [
+            'list' => $list,
+            'year' => $year,
+            'month' => $month,
+            'divisi' => $divisi,
+            'pageTitle' => $pageTitle,
+            'breadcrumb' => $breadcrumb
+        ]);
+    }
+
+    protected function getUidsByDivisi(string $divisi)
+    {
+        $divisi = strtolower(trim($divisi));
+        if ($divisi === 'keamanan' || $divisi === 'scurity' || $divisi === 'security' || $divisi === 'satpam') {
+            return Peserta::where(function ($q) {
+                $q->whereIn(DB::raw('LOWER(jabatan)'), ['scurity', 'security', 'keamanan'])
+                  ->orWhere('type', 'Satpam');
+            })->pluck('uid');
+        }
+
+        if ($divisi === 'kebersihan' || $divisi === 'cs') {
+            return Peserta::where(function ($q) {
+                $q->whereIn(DB::raw('LOWER(jabatan)'), ['kebersihan', 'cs']);
+            })->pluck('uid');
+        }
+
+        return Peserta::whereRaw('LOWER(jabatan) = ?', [$divisi])->pluck('uid');
     }
 
     /**
@@ -104,11 +154,12 @@ class AbsensiController extends Controller
         return back()->with('msg', 'danger-Periode tanggal kosong');
     }
 
-    // 5) Ambil peserta (sesuai filter lama)
+    // 5) Ambil peserta (sesuai filter relawan)
     $peserta = Peserta::query()
         ->whereNotNull('type')
         ->whereNotIn('type', ['Satpam', 'cs'])
-        ->orderBy('id', 'asc')
+        ->whereNotIn('jabatan', ['scurity', 'kebersihan'])
+        ->orderByRaw("CASE WHEN LOWER(name) LIKE '%riski%' AND LOWER(jabatan) = 'ompreng' THEN 1 ELSE 0 END, id ASC")
         ->get(['name', 'nik', 'uid']);
 
     if ($peserta->isEmpty()) {
@@ -394,10 +445,44 @@ class AbsensiController extends Controller
      */
     public function show(Absensi $absensi)
     {
-        $list_tgl=dateRange( $absensi->tgl_mulai, $absensi->tgl_selesai);
-             $detailArray = DetailAbsen::where('id_absen', $absensi->id) ->orderBy('id', 'asc')->get();
-        //dd($detailArray);
-        return view('page.detailAbsen', ["list" => $detailArray, 'absen' => $absensi]);
+        $list_tgl = dateRange($absensi->tgl_mulai, $absensi->tgl_selesai);
+        $detailArray = DetailAbsen::with('peserta')
+            ->where('id_absen', $absensi->id)
+            ->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")
+            ->get();
+
+        $pesertaMap = Peserta::whereIn('uid', $detailArray->pluck('id_peserta'))->pluck('jabatan', 'uid');
+
+        return view('page.detailAbsen', [
+            "list" => $detailArray,
+            'absen' => $absensi,
+            'divisi' => null,
+            'pesertaMap' => $pesertaMap,
+            'pageTitle' => 'Absensi Relawan'
+        ]);
+    }
+
+    public function divisiShow($divisi, Absensi $absensi)
+    {
+        $divisi = strtolower($divisi);
+        $uids = $this->getUidsByDivisi($divisi);
+        $list_tgl = dateRange($absensi->tgl_mulai, $absensi->tgl_selesai);
+        $detailArray = DetailAbsen::with('peserta')
+            ->where('id_absen', $absensi->id)
+            ->whereIn('id_peserta', $uids)
+            ->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")
+            ->get();
+
+        $pesertaMap = Peserta::whereIn('uid', $detailArray->pluck('id_peserta'))->pluck('jabatan', 'uid');
+        $displayDivisi = formatDivisi($divisi);
+
+        return view('page.detailAbsen', [
+            "list" => $detailArray,
+            'absen' => $absensi,
+            'divisi' => $divisi,
+            'pesertaMap' => $pesertaMap,
+            'pageTitle' => 'Absensi ' . $displayDivisi
+        ]);
     }
 
     /**
@@ -435,6 +520,7 @@ class AbsensiController extends Controller
         $absensi->delete();
         return redirect(route('absensi.index'))->with('msg', 'success-berhasil menghapus absensi');
     }
+
     /**
      * Display the specified resource.
      * lihat rekap absen untuk 1 jenis absensi bisa bulan dan minggu
@@ -443,95 +529,165 @@ class AbsensiController extends Controller
      */
     public function showRekap(Absensi $absensi)
     {
-        $btsd = Setting::where('name','jam_datang_karyawan')->first()->value;
-        $btsp = Setting::where('name','jam_pulang_karyawan')->first()->value;
+        return $this->buildRekapView($absensi, null);
+    }
 
-        //dd($tgllist);
-            $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->orderby('id', 'ASC')->get();
+    public function divisiRekap($divisi, Absensi $absensi)
+    {
+        return $this->buildRekapView($absensi, strtolower($divisi));
+    }
 
-            $dataa= $dataAbsen[0];
-        //dd($dataa);
+    protected function buildRekapView(Absensi $absensi, ?string $divisi = null)
+    {
+        $query = DetailAbsen::with('peserta')->where('id_absen', $absensi->id);
+        if ($divisi) {
+            $uids = $this->getUidsByDivisi($divisi);
+            $query->whereIn('id_peserta', $uids);
+        }
+        $dataAbsen = $query->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")->get();
+        $displayDivisi = $divisi ? formatDivisi($divisi) : null;
 
-        $datay = explode("&",$dataa->presensi);
+        if ($dataAbsen->isEmpty()) {
+            return view('page.detailRekap', [
+                "list" => [],
+                "tgls" => ['rekap'],
+                'rekap' => $absensi,
+                'divisi' => $divisi,
+                'pesertaMap' => [],
+                'pesertaByNik' => [],
+                'pageTitle' => $displayDivisi ? 'Rekap Presensi ' . $displayDivisi : 'Rekap Presensi Relawan'
+            ]);
+        }
+
+        $dataa = $dataAbsen->first();
+        $datay = explode("&", $dataa->presensi);
         array_pop($datay);
         $tgllist = [];
 
-        foreach($datay as $prey) {
+        foreach ($datay as $prey) {
             $prez = explode("_", $prey);
-            if($prez[1]==0) {
-                $tgllist [] = $prez[0];
+            if (isset($prez[1]) && $prez[1] == 0) {
+                $tgllist[] = $prez[0];
             }
         }
         array_push($tgllist, "rekap");
 
-        $detailArray =[];
-            $f = 1;
-            $h = 0.8;
-            $t =0;
-            foreach($dataAbsen as $data){
+        $settings = Setting::pluck('value', 'name');
+        $pesertaMap = Peserta::whereIn('uid', $dataAbsen->pluck('id_peserta'))->pluck('jabatan', 'uid');
+        $pesertaByNik = Peserta::whereIn('uid', $dataAbsen->pluck('id_peserta'))->pluck('jabatan', 'nik');
 
-                $presensi = 0;
-                $presnsiArray = [];
-                $datax = explode("&",$data->presensi);
-                array_pop($datax);
-                foreach($datax as $pre){
-                    $pres = explode("_",$pre);
-                    if($pres[1]==0) {
-                        if (($pres[2] == 0) && ($pres[3] == 0)) {
-                            $presnsiArray [] = "Tidak Hadir";
-                            $presensi += $t;
-                        } else if (($pres[2] <> 0) && ($pres[3] <> 0)) {
-                            $dtg = strtotime($pres[2]);
-                            $plg = strtotime($pres[3]);
-                            $limd = strtotime($btsd);
-                            $limp = strtotime($btsp);
-                            if ($dtg < $limd && $plg > $limp) {
-                            $presnsiArray [] = "Tepat waktu";
-                            $presensi += $f;
-                            } else  {
-                                $presnsiArray [] = "Hadir";
-                                $presensi += $h;
+        $detailArray = [];
+        $f = 1;
+        $h = 0.8;
+        $t = 0;
+
+        foreach ($dataAbsen as $data) {
+            $jabatanUser = strtolower($pesertaMap[$data->id_peserta] ?? $divisi ?? 'persiapan');
+            $btsd = $settings['jam_datang_' . $jabatanUser] ?? $settings['jam_datang_persiapan'] ?? '08:00:00';
+            $btsp = $settings['jam_pulang_' . $jabatanUser] ?? $settings['jam_pulang_persiapan'] ?? '17:00:00';
+
+            $presensi = 0;
+            $presnsiArray = [];
+            $datax = explode("&", $data->presensi);
+            array_pop($datax);
+
+            foreach ($datax as $pre) {
+                $pres = explode("_", $pre);
+                if (isset($pres[1]) && $pres[1] == 0) {
+                    $datang = $pres[2] ?? 0;
+                    $pulang = $pres[3] ?? 0;
+
+                    if ($datang == 0 && $pulang == 0) {
+                        $presnsiArray[] = "Tidak Hadir";
+                        $presensi += $t;
+                    } else if ($datang != 0 && $pulang != 0) {
+                        $dtg = strtotime($datang);
+                        $plg = strtotime($pulang);
+                        $limd = strtotime($btsd);
+                        $limp = strtotime($btsp);
+
+                        if ($limd && $limp) {
+                            if ($limp < $limd) {
+                                $dtgOnTime = ($dtg <= $limd || $dtg >= strtotime("12:00:00"));
+                                $plgOnTime = ($plg >= $limp && $plg < strtotime("12:00:00"));
+                                if ($dtgOnTime && $plgOnTime) {
+                                    $presnsiArray[] = "Tepat waktu";
+                                    $presensi += $f;
+                                } else {
+                                    $presnsiArray[] = "Hadir";
+                                    $presensi += $h;
+                                }
+                            } else {
+                                if ($dtg <= $limd && $plg >= $limp) {
+                                    $presnsiArray[] = "Tepat waktu";
+                                    $presensi += $f;
+                                } else {
+                                    $presnsiArray[] = "Hadir";
+                                    $presensi += $h;
+                                }
                             }
                         } else {
-                            $presnsiArray [] = "Hadir";
+                            $presnsiArray[] = "Hadir";
                             $presensi += $h;
                         }
-
+                    } else {
+                        $presnsiArray[] = "Hadir";
+                        $presensi += $h;
                     }
                 }
-                $harga = $presensi * 35000;
-                $rekap = $presensi ." hari";
-
-                 array_push($presnsiArray,$rekap);
-                 $detailArray [$data->data_peserta] = $presnsiArray;
             }
+            $rekap = $presensi . " hari";
+            array_push($presnsiArray, $rekap);
+            $detailArray[$data->data_peserta] = $presnsiArray;
+        }
 
-
-
-
-        //dd($tgllist);
-        return view('page.detailRekap', ["list" => $detailArray, "tgls"=>$tgllist, 'rekap'=>$absensi]);
+        return view('page.detailRekap', [
+            "list" => $detailArray,
+            "tgls" => $tgllist,
+            'rekap' => $absensi,
+            'divisi' => $divisi,
+            'pesertaMap' => $pesertaMap,
+            'pesertaByNik' => $pesertaByNik,
+            'pageTitle' => $displayDivisi ? 'Rekap Presensi ' . $displayDivisi : 'Rekap Presensi Relawan'
+        ]);
     }
 
-    Public function detail($id){
+    public function detail($id){
         $dataUser = DetailAbsen::find($id);
+        if (!$dataUser) {
+            abort(404, 'Data presensi tidak ditemukan');
+        }
         $absen = Absensi::find($dataUser->id_absen);
-        //dd($absen);
-        return view('page.detailUser', ["list"=> $dataUser, "absen"=> $absen]);
-        //dd($absen);
-
+        $peserta = Peserta::where('uid', $dataUser->id_peserta)->first();
+        $settings = Setting::pluck('value', 'name');
+        return view('page.detailUser', [
+            "list"=> $dataUser,
+            "absen"=> $absen,
+            "peserta" => $peserta,
+            "settings" => $settings
+        ]);
     }
-    Public function detailpdf($id){
-        $dataUser = DetailAbsen::find($id);
-        $peserta = explode("-",$dataUser->data_peserta);
-        $absen = Absensi::find($dataUser->id_absen);
-        $nama = $peserta[0]."_".$absen->type."_".$absen->bln."_".$absen->thn;
-        //dd($absen);
-        //return view('page.detailUser', ["list"=> $dataUser, "absen"=> $absen]);
-        $pdf = PDF::loadview('pdf.detail_user_pdf',["list"=> $dataUser, "absen"=> $absen]);
-        return $pdf->download('detail_'.$nama.'');
-        //dd($absen);
 
+    public function detailpdf($id){
+        $dataUser = DetailAbsen::find($id);
+        if (!$dataUser) {
+            abort(404, 'Data presensi tidak ditemukan');
+        }
+        $peserta = Peserta::where('uid', $dataUser->id_peserta)->first();
+        $absen = Absensi::find($dataUser->id_absen);
+        $settings = Setting::pluck('value', 'name');
+        $parts = explode("-", $dataUser->data_peserta);
+        $rawNama = $peserta ? $peserta->name : ($parts[0] ?? 'relawan');
+        $namaBersih = preg_replace('/[^A-Za-z0-9_\-]/', '_', trim($rawNama));
+        $nama = $namaBersih . "_" . ($absen->type ?? 'absen') . "_" . ($absen->bln ?? '') . "_" . ($absen->thn ?? '');
+
+        $pdf = PDF::loadview('pdf.detail_user_pdf', [
+            "list" => $dataUser,
+            "absen" => $absen,
+            "peserta" => $peserta,
+            "settings" => $settings
+        ]);
+        return $pdf->download('detail_' . $nama . '.pdf');
     }
 
 }

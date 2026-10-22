@@ -14,18 +14,19 @@ class SettingController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        if (Gate::allows('umum')) {
-                $seting = Setting::where('grup', 6)->paginate(10);
-            } else if (Gate::allows('akademik')) {
-                 $seting = Setting::where('grup', 7)->paginate(10);
-            }
-            else{
-               $seting = Setting::paginate(10);  
-            }
+        if ($request->query('grup') == 7 || (!Gate::allows('umum') && Gate::allows('akademik'))) {
+            $seting = Setting::where('grup', 7)->orderBy('id', 'asc')->paginate(25);
+            $pageTitle = 'Setting Batas Jam Akademik';
+        } else {
+            $seting = Setting::where(function($q) {
+                $q->whereNull('grup')->orWhere('grup', 6);
+            })->orderBy('id', 'asc')->paginate(25);
+            $pageTitle = 'Setting Jam Kerja';
+        }
         
-        return view('page.settingList', ['seting'=> $seting]);
+        return view('page.settingList', ['seting' => $seting, 'pageTitle' => $pageTitle]);
     }
 
     /**

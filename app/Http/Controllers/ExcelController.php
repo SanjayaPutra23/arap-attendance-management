@@ -17,16 +17,9 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelController extends Controller
 {
-    public function index(){
-        $data = file(public_path('assets/2_attlog.dat'));
-
-        foreach($data as $data1){
-            $data3 = trim($data1);
-            $str = preg_replace('/(\v|\s)+/', '@', $data3);
-
-            $data2= explode('@',$str);
-        }
-        dd($data);
+    public function index()
+    {
+        return redirect()->route('home');
     }
 
 
@@ -36,7 +29,9 @@ class ExcelController extends Controller
         $nama = $absensi->type."_".namabulan($absensi->bln)."-".$absensi->thn;
 
         $list_tgl=dateRange( $absensi->tgl_mulai, $absensi->tgl_selesai);
-        $detailArray = DetailAbsen::where('id_absen', $absensi->id)->orderBy('id', 'asc')->get();
+        $detailArray = DetailAbsen::where('id_absen', $absensi->id)
+            ->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")
+            ->get();
         return Excel::download(new ExAbsen($detailArray, $list_tgl), 'Data_'.$nama.'.xlsx');
 
     }
@@ -53,67 +48,92 @@ class ExcelController extends Controller
     }
     public function rekap(Absensi $absensi)
     {
-            $btsd = Setting::where('name','jam_datang_karyawan')->first()->value;
-            $btsp = Setting::where('name','jam_pulang_karyawan')->first()->value;
         $nama = $absensi->type." ".namabulan($absensi->bln)."-".$absensi->thn;
 
+        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)
+            ->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")
+            ->get();
 
-        //dd($tgllist);
-        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->orderby('id', 'ASC')->get();
-        $dataa= $dataAbsen[0];
-        $datay = explode("&",$dataa->presensi);
+        if ($dataAbsen->isEmpty()) {
+            return Excel::download(new ExRekap([], ['rekap']), 'Rekap_'.$nama.'.xlsx');
+        }
+
+        $dataa = $dataAbsen->first();
+        $datay = explode("&", $dataa->presensi);
         array_pop($datay);
         $tgllist = [];
 
         foreach($datay as $prey) {
             $prez = explode("_", $prey);
-            if($prez[1]==0) {
-                $tgllist [] = $prez[0];
+            if(isset($prez[1]) && $prez[1] == 0) {
+                $tgllist[] = $prez[0];
             }
         }
         array_push($tgllist, "rekap");
-        $detailArray =[];
+
+        $settings = Setting::pluck('value', 'name');
+        $pesertaMap = Peserta::whereIn('uid', $dataAbsen->pluck('id_peserta'))->pluck('jabatan', 'uid');
+
+        $detailArray = [];
         $f = 1;
         $h = 0.8;
-        $t =0;
-        foreach($dataAbsen as $data){
+        $t = 0;
+
+        foreach($dataAbsen as $data) {
+            $jabatanUser = strtolower($pesertaMap[$data->id_peserta] ?? ($absensi->peg == 2 ? 'kebersihan' : 'persiapan'));
+            $btsd = $settings['jam_datang_' . $jabatanUser] ?? ($absensi->peg == 2 ? ($settings['jam_datang_kebersihan'] ?? '08:00:00') : ($settings['jam_datang_persiapan'] ?? '08:00:00'));
+            $btsp = $settings['jam_pulang_' . $jabatanUser] ?? ($absensi->peg == 2 ? ($settings['jam_pulang_kebersihan'] ?? '15:00:00') : ($settings['jam_pulang_persiapan'] ?? '17:00:00'));
 
             $presensi = 0;
             $presnsiArray = [];
-            $datax = explode("&",$data->presensi);
+            $datax = explode("&", $data->presensi);
             array_pop($datax);
-            foreach($datax as $pre){
-                $pres = explode("_",$pre);
-                if($pres[1]==0) {
-                    if (($pres[2] == 0) && ($pres[3] == 0)) {
-                        $presnsiArray [] = "Tidak Hadir";
+
+            foreach($datax as $pre) {
+                $pres = explode("_", $pre);
+                if(isset($pres[1]) && $pres[1] == 0) {
+                    $datang = $pres[2] ?? 0;
+                    $pulang = $pres[3] ?? 0;
+
+                    if ($datang == 0 && $pulang == 0) {
+                        $presnsiArray[] = "Tidak Hadir";
                         $presensi += $t;
-                    } else if (($pres[2] <> 0) && ($pres[3] <> 0)) {
-                        $dtg = strtotime($pres[2]);
-                        $plg = strtotime($pres[3]);
+                    } else if ($datang != 0 && $pulang != 0) {
+                        $dtg = strtotime($datang);
+                        $plg = strtotime($pulang);
                         $limd = strtotime($btsd);
                         $limp = strtotime($btsp);
-                        if ($dtg < $limd && $plg > $limp) {
-                            $presnsiArray [] = "Tepat Waktu";
+
+                        $tepatWaktu = false;
+                        if ($limd && $limp) {
+                            if ($limp < $limd) { // Cross midnight (e.g. Ompreng)
+                                $dtgOnTime = ($dtg <= $limd || $dtg >= strtotime("12:00:00"));
+                                $plgOnTime = ($plg >= $limp && $plg < strtotime("12:00:00"));
+                                $tepatWaktu = ($dtgOnTime && $plgOnTime);
+                            } else {
+                                $tepatWaktu = ($dtg <= $limd && $plg >= $limp);
+                            }
+                        }
+
+                        if ($tepatWaktu) {
+                            $presnsiArray[] = "Tepat Waktu";
                             $presensi += $f;
-                        } else  {
-                            $presnsiArray [] = "Hadir";
+                        } else {
+                            $presnsiArray[] = "Hadir";
                             $presensi += $h;
                         }
                     } else {
-                        $presnsiArray [] = "Hadir";
+                        $presnsiArray[] = "Hadir";
                         $presensi += $h;
                     }
                 }
             }
-            $harga = $presensi * 35000;
-            $rekap = $presensi." Hari";
-            array_push($presnsiArray,$rekap);
-            $detailArray [$data->data_peserta] = $presnsiArray;
+            $rekap = $presensi . " Hari";
+            array_push($presnsiArray, $rekap);
+            $detailArray[$data->data_peserta] = $presnsiArray;
         }
-        //dd($detailArray);
-        return Excel::download(new ExRekap($detailArray, $tgllist), 'Rekap_'.$nama.'.xlsx');
 
+        return Excel::download(new ExRekap($detailArray, $tgllist), 'Rekap_'.$nama.'.xlsx');
     }
 
     private function abjad($n) {
@@ -127,72 +147,96 @@ class ExcelController extends Controller
 
     public function rekap2(Absensi $absensi)
     {
-        $btsd = Setting::where('name','jam_datang_karyawan')->first()->value;
-        $btsp = Setting::where('name','jam_pulang_karyawan')->first()->value;
         $nama = $absensi->type." ".namabulan($absensi->bln)."-".$absensi->thn;
 
+        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)
+            ->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")
+            ->get();
 
-        //dd($tgllist);
-        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->orderby('id', 'ASC')->get();
-        $dataa= $dataAbsen[0];
-        $datay = explode("&",$dataa->presensi);
+        if ($dataAbsen->isEmpty()) {
+            return Excel::download(new ExRekap([], ['rekap']), 'Hitungan_Rekap_'.$nama.'.xlsx');
+        }
+
+        $dataa = $dataAbsen->first();
+        $datay = explode("&", $dataa->presensi);
         array_pop($datay);
         $tgllist = [];
 
         foreach($datay as $prey) {
             $prez = explode("_", $prey);
-            if($prez[1]==0) {
-                $tgllist [] = $prez[0];
+            if(isset($prez[1]) && $prez[1] == 0) {
+                $tgllist[] = $prez[0];
             }
         }
         array_push($tgllist, "rekap");
-        $detailArray =[];
+
+        $settings = Setting::pluck('value', 'name');
+        $pesertaMap = Peserta::whereIn('uid', $dataAbsen->pluck('id_peserta'))->pluck('jabatan', 'uid');
+
+        $detailArray = [];
         $f = 1;
         $h = 0.8;
-        $t =0;
+        $t = 0;
         $line = 3;
-        foreach($dataAbsen as $data){
+
+        foreach($dataAbsen as $data) {
+            $jabatanUser = strtolower($pesertaMap[$data->id_peserta] ?? ($absensi->peg == 2 ? 'kebersihan' : 'persiapan'));
+            $btsd = $settings['jam_datang_' . $jabatanUser] ?? ($absensi->peg == 2 ? ($settings['jam_datang_kebersihan'] ?? '08:00:00') : ($settings['jam_datang_persiapan'] ?? '08:00:00'));
+            $btsp = $settings['jam_pulang_' . $jabatanUser] ?? ($absensi->peg == 2 ? ($settings['jam_pulang_kebersihan'] ?? '15:00:00') : ($settings['jam_pulang_persiapan'] ?? '17:00:00'));
 
             $presensi = 0;
             $presnsiArray = [];
-            $datax = explode("&",$data->presensi);
+            $datax = explode("&", $data->presensi);
             array_pop($datax);
-            foreach($datax as $pre){
-                $pres = explode("_",$pre);
-                if($pres[1]==0) {
-                    if (($pres[2] == 0) && ($pres[3] == 0)) {
-                        $presnsiArray [] = $t;
+
+            foreach($datax as $pre) {
+                $pres = explode("_", $pre);
+                if(isset($pres[1]) && $pres[1] == 0) {
+                    $datang = $pres[2] ?? 0;
+                    $pulang = $pres[3] ?? 0;
+
+                    if ($datang == 0 && $pulang == 0) {
+                        $presnsiArray[] = $t;
                         $presensi += $t;
-                    } else if (($pres[2] <> 0) && ($pres[3] <> 0)) {
-                        $dtg = strtotime($pres[2]);
-                        $plg = strtotime($pres[3]);
+                    } else if ($datang != 0 && $pulang != 0) {
+                        $dtg = strtotime($datang);
+                        $plg = strtotime($pulang);
                         $limd = strtotime($btsd);
                         $limp = strtotime($btsp);
-                        if ($dtg < $limd && $plg > $limp) {
-                            $presnsiArray [] = $f;
+
+                        $tepatWaktu = false;
+                        if ($limd && $limp) {
+                            if ($limp < $limd) { // Cross midnight
+                                $dtgOnTime = ($dtg <= $limd || $dtg >= strtotime("12:00:00"));
+                                $plgOnTime = ($plg >= $limp && $plg < strtotime("12:00:00"));
+                                $tepatWaktu = ($dtgOnTime && $plgOnTime);
+                            } else {
+                                $tepatWaktu = ($dtg <= $limd && $plg >= $limp);
+                            }
+                        }
+
+                        if ($tepatWaktu) {
+                            $presnsiArray[] = $f;
                             $presensi += $f;
                         } else {
-                            $presnsiArray [] = $h;
+                            $presnsiArray[] = $h;
                             $presensi += $h;
                         }
                     } else {
-                        $presnsiArray [] = $h;
+                        $presnsiArray[] = $h;
                         $presensi += $h;
                     }
                 }
             }
-            $harga = $presensi * 35000;
-            //$rekap = "Rp. ".number_format($harga,0,",",".")." (".$presensi.")";
-            $jmlrek = count($presnsiArray) +2;
+            $jmlrek = count($presnsiArray) + 2;
             $abi = $this->abjad($jmlrek);
             $rekap = "=sum(D".$line.":".$abi.$line.")";
-            array_push($presnsiArray,$rekap);
-            $detailArray [$data->data_peserta] = $presnsiArray;
+            array_push($presnsiArray, $rekap);
+            $detailArray[$data->data_peserta] = $presnsiArray;
             $line++;
         }
 
         return Excel::download(new ExRekap($detailArray, $tgllist), 'Hitungan_Rekap_'.$nama.'.xlsx');
-
     }
 
     public function rekapS(Absensi $absensi)

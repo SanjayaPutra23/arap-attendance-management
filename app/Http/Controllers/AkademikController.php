@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\DetailPersepsi;
 use App\Models\Libur;
 use App\Models\Mesin;
+use App\Services\MachineSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -255,14 +256,13 @@ class AkademikController extends Controller
      */
     public function show($id)
     {
-        $pools = Mesin::where('tipe', "ip")->where('id', $id)->first();
-        $zk = new ZKTeco( $pools->ip, $pools->port);
-        if($zk->connect()){
-            $zk->disconnect();
-            return redirect()->back()->with('msg','success-Mesin Terkoneksi');
-        } else {
-            return redirect()->back()->with('msg','success-Gagal Mesin Terkoneksi');
+        $mesin = Mesin::where('tipe', 'ip')->find($id);
+        if (!$mesin) {
+            return redirect()->back()->with('msg', 'danger-Data mesin tidak ditemukan atau IP/Port belum dikonfigurasi.');
         }
+
+        $res = app(MachineSyncService::class)->checkConnection($mesin);
+        return redirect()->back()->with('msg', $res['type'] . '-' . $res['message']);
     }
 
     /**
@@ -499,140 +499,38 @@ class AkademikController extends Controller
 
 public function pull($id)
     {
-        if ($this->tarik($id)){
-            return redirect()->back()->with('msg','success-Data berhasil ditarik');
-        } else {
-            return redirect()->back()->with('msg','success-Gagal Mesin Terkoneksi');
-        }
+        $res = $this->tarik((int) $id);
+        return redirect()->back()->with('msg', $res['type'] . '-' . $res['message']);
     }
 
-private function tarik(int $id): bool
-        {
-            $mesin = Mesin::where('tipe', 'ip')->find($id);
-            if (!$mesin) return false;
-
-            $zk = new ZKTeco($mesin->ip, $mesin->port);
-
-            if (!$zk->connect()) {
-                return false;
-            }
-
-            try {
-                $rows = $zk->getAttendance(); // array data dari mesin
-            } finally {
-                $zk->disconnect();
-            }
-
-            if (empty($rows)) {
-                // tidak ada data dari mesin
-                return true;
-            }
-
-            // Ambil cutoff timestamp terakhir untuk mesin ini
-            $lastTs = Akapool::where('mesin_id', $id)->max('timestamp');
-            // Jika null, pakai epoch awal
-            $cutoff = $lastTs ? Carbon::parse($lastTs) : Carbon::create(1970,1,1,0,0,0);
-
-            $now = now()->toDateTimeString();
-            $buffer = [];
-
-            // Optional: cegah duplikat di memori (kalau perangkat suka kirim ulang batch lama)
-            // Key = mesin_id|iduser|timestamp|type
-            $seen = [];
-
-            foreach ($rows as $r) {
-                // Pastikan field minimal tersedia
-                if (!isset($r['timestamp'], $r['id'], $r['type'], $r['state'], $r['uid'])) {
-                    continue;
-                }
-
-                // Parse timestamp dari mesin
-                // Format umum ZKTeco: "YYYY-mm-dd HH:ii:ss"
-                try {
-                    $ts = Carbon::parse($r['timestamp']);
-                } catch (\Throwable $e) {
-                    continue; // skip yang tidak valid
-                }
-
-                // Hanya data yang lebih baru dari cutoff
-                if ($ts->lessThanOrEqualTo($cutoff)) {
-                    continue;
-                }
-
-                // Susun kolom sesuai schema lama (string) maupun baru (native)
-                $dateStr = $ts->toDateString();      // "YYYY-mm-dd"
-                $timeStr = $ts->toTimeString();      // "HH:ii:ss"
-                $yearStr = $ts->format('Y');
-                $monthStr= $ts->format('m');
-
-                $record = [
-                    'uid'       => $r['uid'],             // user UID dari mesin
-                    'iduser'    => $r['id'],              // biasanya user id pada device
-                    'state'     => (int) $r['state'],
-                    'year'      => $yearStr,
-                    'month'     => $monthStr,
-                    'date'      => $dateStr,
-                    'time'      => $timeStr,
-                    'timestamp' => $ts->toDateTimeString(),
-                    'type'      => (int) $r['type'],      // 0=in, 1=out (umum)
-                    'mesin_id'  => $id,
-                    'created_at'=> $now,
-                    'updated_at'=> $now,
-                ];
-
-                // Dedup in-memory
-                $k = $id.'|'.$record['iduser'].'|'.$record['timestamp'].'|'.$record['type'];
-                if (isset($seen[$k])) {
-                    continue;
-                }
-                $seen[$k] = true;
-
-                $buffer[] = $record;
-            }
-
-            if (empty($buffer)) {
-                // Tidak ada yang baru
-                return true;
-            }
-
-            // Insert batch (chunk agar aman)
-            DB::beginTransaction();
-            try {
-                foreach (array_chunk($buffer, 1000) as $chunk) {
-                    // Jika sudah pasang UNIQUE index (mesin_id,iduser,timestamp,type),
-                    // ganti baris berikut jadi: Pool::insertOrIgnore($chunk);
-                    Akapool::insert($chunk);
-                }
-
-                // Update last_sync pakai data DB terbaru
-                $latest = Akapool::where('mesin_id', $id)->max('timestamp');
-                if ($latest) {
-                    $mesin->last_sync = $latest;
-                    $mesin->save();
-                }
-
-                DB::commit();
-                return true;
-            } catch (\Throwable $e) {
-                DB::rollBack();
-                // Log::error('Gagal tarik absen: '.$e->getMessage());
-                return false;
-            }
+    private function tarik(int $id): array
+    {
+        $mesin = Mesin::where('tipe', 'ip')->find($id);
+        if (!$mesin) {
+            return [
+                'success' => false,
+                'type' => 'danger',
+                'message' => 'Data mesin tidak ditemukan atau tipe mesin bukan IP.'
+            ];
         }
 
-    public function purage(){
-        $hitung = Akapool::all('id')->count();
-        if($hitung > 40000) {
-             $tgl = date("Y-m-d", strtotime("-3 months"));
-        //$tgl = date("Y-m-d", strtotime("2023-06-4"));
-        $idp = Akapool::where('date', $tgl)->orderby('id', 'DESC')->first('id');
-        Akapool::where('id','<',$idp->id)->delete();
-        return redirect()->back()->with('msg','success-Pool data telah dibersihkan');
-        } else {
-            return redirect()->back()->with('msg','success-Pool data masih cukup bersih');
-        }
+        return app(MachineSyncService::class)->syncMachine($mesin);
     }
 
-
+    public function purage()
+    {
+        $hitung = Akapool::count();
+        if ($hitung > 40000) {
+            $tgl = date("Y-m-d", strtotime("-3 months"));
+            $idp = Akapool::where('date', '<=', $tgl)->orderBy('id', 'DESC')->first('id');
+            if ($idp) {
+                Akapool::where('id', '<=', $idp->id)->delete();
+                return redirect()->back()->with('msg', 'success-Pool data (lebih dari 3 bulan) telah dibersihkan');
+            } else {
+                return redirect()->back()->with('msg', 'warning-Tidak ada data pool yang lebih lama dari 3 bulan untuk dibersihkan');
+            }
+        } else {
+            return redirect()->back()->with('msg', 'success-Pool data masih cukup bersih');
+        }
+    }
 }
-

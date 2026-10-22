@@ -24,12 +24,20 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Otomatisasi sinkronisasi mesin absensi jika diaktifkan di konfigurasi (.env: ARAP_AUTO_SYNC_ENABLED=true)
+        if (config('services.arap.auto_sync_enabled', false)) {
+            $time = config('services.arap.auto_sync_time', '17:00');
+            $schedule->command('arap:sync-machine')
+                     ->dailyAt($time)
+                     ->withoutOverlapping()
+                     ->appendOutputTo(storage_path('logs/machine_sync.log'));
+        }
     }
 
     /**
      * Register the commands for the application.
      *
+     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function commands()

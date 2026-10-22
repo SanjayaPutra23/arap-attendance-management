@@ -161,15 +161,17 @@ public function store(Request $request)
         return back()->with('msg', 'danger-Periode tanggal kosong');
     }
 
-    // 5) Ambil peserta SATPAM saja + urutkan by id (ganti ke ->orderBy('uid') kalau mau)
+    // 5) Ambil peserta Keamanan/Satpam (kompatibel dengan jabatan 'scurity', 'security', 'keamanan' atau type 'Satpam')
     $peserta = Peserta::query()
-        ->whereNotNull('type')
-        ->where('type', 'Satpam')
+        ->where(function ($q) {
+            $q->where('type', 'Satpam')
+              ->orWhereIn(DB::raw('LOWER(jabatan)'), ['scurity', 'security', 'keamanan']);
+        })
         ->orderBy('id', 'asc')
         ->get(['id', 'name', 'nik', 'uid']);
 
     if ($peserta->isEmpty()) {
-        return back()->with('msg', 'danger-Tidak ada peserta Satpam');
+        return back()->with('msg', 'danger-Tidak ada peserta Keamanan');
     }
 
     $uids = $peserta->pluck('uid')->map(fn($v) => (string) $v);
@@ -444,6 +446,9 @@ public function store(Request $request)
 
         //dd($tgllist);
         $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->get();
+        if ($dataAbsen->isEmpty()) {
+            return view('page.detailRekapS', ["list" => [], "tgls" => ['rekap'], 'rekap' => $absensi]);
+        }
 
         $dataa= $dataAbsen[0];
         //dd($dataa);

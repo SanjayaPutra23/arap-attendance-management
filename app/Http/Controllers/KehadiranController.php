@@ -19,9 +19,27 @@ class KehadiranController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('page.ListKehadiran');
+        $query = Presensi::withCount([
+            'kehadirans',
+            'kehadirans as hadir_count' => function ($q) {
+                $q->whereNotNull('sign');
+            }
+        ]);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('agenda', 'like', "%{$search}%")
+                  ->orWhere('tempat', 'like', "%{$search}%");
+            });
+        }
+
+        $rapatList = $query->orderBy('id', 'desc')->paginate(10);
+
+        return view('page.DaftarHadirRapat', compact('rapatList'));
     }
 
     /**

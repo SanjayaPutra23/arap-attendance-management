@@ -20,6 +20,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'nik',
+        'peserta_id',
         'password',
         'telp',
         'afiliasi',
@@ -46,10 +48,31 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function peserta()
+    {
+        return $this->belongsTo(Peserta::class, 'peserta_id');
+    }
+
+    public function permohonanIzins()
+    {
+        return $this->hasMany(PermohonanIzin::class, 'user_id');
+    }
 
     public function roles()
     {
         return $this->belongsToMany('App\Models\Role');
+    }
+
+    /**
+     * URL Avatar pengguna: foto kustom jika ada, atau avatar SVG deterministik berbasis identitas akun
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar && $this->avatar !== 'default.png' && file_exists(public_path('assets/img/avatars/' . $this->avatar))) {
+            return asset('assets/img/avatars/' . $this->avatar);
+        }
+
+        return route('avatar.svg', $this->id);
     }
 
     /**
@@ -59,16 +82,21 @@ class User extends Authenticatable
      */
     public function hasAnyRole(string $role)
     {
-        return null !== $this->roles()->where('name', $role)->first();
+        return $this->roles->contains(function ($r) use ($role) {
+            return strcasecmp($r->name, $role) === 0;
+        });
     }
 
     /**
-     *  chek user nya punya beberapa role atau tidak
+     * chek user nya punya beberapa role atau tidak
      * @param array $role
      * @return bool
      */
     public function hasAnyRoles(array $role)
     {
-        return null !== $this->roles()->whereIn('name', $role)->first();
+        $lowerRoles = array_map('strtolower', $role);
+        return $this->roles->contains(function ($r) use ($lowerRoles) {
+            return in_array(strtolower($r->name), $lowerRoles);
+        });
     }
 }

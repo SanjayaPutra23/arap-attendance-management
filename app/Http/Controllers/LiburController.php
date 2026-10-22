@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Libur;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class LiburController extends Controller
 {
@@ -97,19 +98,88 @@ class LiburController extends Controller
     }
 
     
-    public function tarik()
+    public function tarik(Request $request)
     { 
-        $json = json_decode(file_get_contents('https://api-harilibur.vercel.app/api'), true);
+        $year = $request->query('year', date('Y'));
 
-            foreach ($json as $sam) {
-                if ($sam["is_national_holiday"]) {
+        // Mirror resmi endpoint api-harilibur (Cloudflare Pages & Netlify)
+        $endpoints = [
+            "https://api-harilibur.pages.dev/api?year={$year}",
+            "https://api-harilibur.netlify.app/api?year={$year}"
+        ];
+
+        $rawResponse = null;
+        $lastError = null;
+
+        foreach ($endpoints as $url) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'ARAP-Application/1.0');
+            $exec = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr = curl_error($ch);
+            curl_close($ch);
+
+            if ($exec !== false && $httpCode === 200) {
+                $rawResponse = $exec;
+                break;
+            } else {
+                $lastError = !empty($curlErr) ? $curlErr : "HTTP status {$httpCode}";
+            }
+        }
+
+        if (!$rawResponse) {
+            return redirect(route('libur.index'))->with(
+                'msg',
+                'danger-Gagal mengambil data libur nasional: Layanan API tidak dapat dijangkau (' . ($lastError ?? 'koneksi gagal') . '). Pastikan koneksi internet aktif.'
+            );
+        }
+
+        $items = json_decode($rawResponse, true);
+
+        if (!is_array($items)) {
+            return redirect(route('libur.index'))->with(
+                'msg',
+                'danger-Gagal memproses data libur nasional: Format respons data tidak valid.'
+            );
+        }
+
+        $count = 0;
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            if (!empty($item['is_national_holiday']) && !empty($item['holiday_date']) && !empty($item['holiday_name'])) {
+                try {
+                    $tanggal = Carbon::parse($item['holiday_date'])->format('Y-m-d');
+                    $ket = trim((string) $item['holiday_name']);
+
                     Libur::updateOrCreate(
-                        ['tanggal'=> $sam['holiday_date']],
-                        [ 'ket'=> $sam['holiday_name']]
+                        ['tanggal' => $tanggal],
+                        ['ket' => $ket]
                     );
+                    $count++;
+                } catch (\Throwable $e) {
+                    continue;
                 }
             }
-            return redirect( route('libur.index'))->with('msg', 'success-berhasil menarik libur');                    
+        }
+
+        if ($count === 0) {
+            return redirect(route('libur.index'))->with(
+                'msg',
+                'warning-Penarikan selesai, namun tidak ditemukan hari libur nasional untuk tahun ' . $year . '.'
+            );
+        }
+
+        return redirect(route('libur.index'))->with(
+            'msg',
+            'success-Berhasil menarik data libur nasional tahun ' . $year . '. Sebanyak ' . $count . ' hari libur tersimpan.'
+        );                    
     }
 
 }

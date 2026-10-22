@@ -162,14 +162,23 @@ class PesertaController extends Controller
 
     public function test($telp)
     {
-       $nomor = tilpun($telp);
-       $msg = 'berhasil dari arap';
-      $r = sendWATest($nomor);
-       dd($r);
+        $nomor = tilpun($telp);
+        $r = sendWATest($nomor);
+        return response()->json([
+            'status' => 'tested',
+            'phone'  => $nomor,
+            'result' => $r
+        ]);
     }
 
 
 
 
+
+    public function syncAccounts()
+    {
+        \Illuminate\Support\Facades\Artisan::call('arap:sync-relawan');
+        return redirect()->route('admin.peserta.index')->with('msg', 'success-Berhasil menyinkronkan seluruh akun login relawan');
+    }
 
 }

@@ -30,4 +30,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'whatsapp' => [
+        'url' => env('WA_GATEWAY_URL', 'http://api.flarology.id/send-message'),
+        'api_key' => env('WA_API_KEY', ''),
+        'sender' => env('WA_SENDER_NUMBER', ''),
+    ],
+
+    'arap' => [
+        'auto_sync_enabled' => env('ARAP_AUTO_SYNC_ENABLED', false),
+        'auto_sync_time' => env('ARAP_AUTO_SYNC_TIME', '17:00'),
+    ],
+
 ];

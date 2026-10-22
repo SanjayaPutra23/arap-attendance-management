@@ -26,7 +26,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::define('ultraman', function ($user){
-            return $user->hasAnyRole('ultraman');
+            return $user->hasAnyRoles(['Ultraman', 'ultraman']);
         });
         Gate::define('user', function ($user){
             return $user->hasAnyRoles(['User','Ultraman']);
@@ -34,8 +34,11 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('umum', function ($user){
             return $user->hasAnyRoles(['Umum','Ultraman']);
         });
-         Gate::define('akademik', function ($user){
+        Gate::define('akademik', function ($user){
             return $user->hasAnyRoles(['Akademik','Ultraman']);
+        });
+        Gate::define('staff-access', function ($user){
+            return $user->hasAnyRoles(['Umum', 'Akademik', 'Ultraman']);
         });
 
 

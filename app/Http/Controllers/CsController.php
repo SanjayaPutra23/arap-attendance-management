@@ -8,7 +8,9 @@ use App\Models\Absensi;
 use App\Models\Peserta;
 use App\Models\DetailAbsen;
 use App\Models\Libur;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use PDF;
 
@@ -74,9 +76,14 @@ class CsController extends Controller
         } else {
             $tgl_selesai = date('Y-m-d H:i:s', $tgl_se);
             $list_tgl = dateRange($tgl_mulai, $tgl_selesai);
-            //dd($list_tgl);
-            $list_peserta = Peserta::orWhereNotNull('type')->Where('type','cs')->get(['name', 'nik', 'uid']);
-            //dd($list_peserta);
+            $list_peserta = Peserta::where(function($q) {
+                $q->where('type', 'cs')
+                  ->orWhereIn(DB::raw('LOWER(jabatan)'), ['kebersihan', 'cs']);
+            })->get(['name', 'nik', 'uid']);
+
+            if ($list_peserta->isEmpty()) {
+                return back()->with('msg', 'danger-Tidak ada peserta Kebersihan');
+            }
             $now = now()->toDateTimeString();
             $latest = Pool::select('created_at')->orderBy('id', 'DESC')->first()->created_at;
             //dd($latest);
@@ -232,4 +239,79 @@ class CsController extends Controller
         //dd($absen);
 
     }
+
+    public function showRekap(Absensi $absensi)
+    {
+        $dataAbsen = DetailAbsen::where('id_absen', $absensi->id)->get();
+        if ($dataAbsen->isEmpty()) {
+            return view('page.detailRekapC', ["list" => [], "tgls" => ['rekap'], 'rekap' => $absensi]);
+        }
+
+        $dataa = $dataAbsen->first();
+        $datay = explode("&", $dataa->presensi);
+        array_pop($datay);
+        $tgllist = [];
+
+        foreach ($datay as $prey) {
+            $prez = explode("_", $prey);
+            if (isset($prez[1]) && $prez[1] == 0) {
+                $tgllist[] = $prez[0];
+            }
+        }
+        array_push($tgllist, "rekap");
+
+        $settings = Setting::pluck('value', 'name');
+        $btsd = $settings['jam_datang_kebersihan'] ?? $settings['jam_datang_cs'] ?? '08:00:00';
+        $btsp = $settings['jam_pulang_kebersihan'] ?? $settings['jam_pulang_cs'] ?? '15:00:00';
+
+        $detailArray = [];
+        $f = 1;
+        $h = 0.8;
+        $t = 0;
+
+        foreach ($dataAbsen as $data) {
+            $presensi = 0;
+            $presnsiArray = [];
+            $datax = explode("&", $data->presensi);
+            array_pop($datax);
+
+            foreach ($datax as $pre) {
+                $pres = explode("_", $pre);
+                if (isset($pres[1]) && $pres[1] == 0) {
+                    $datang = $pres[2] ?? 0;
+                    $pulang = $pres[3] ?? 0;
+
+                    if ($datang == 0 && $pulang == 0) {
+                        $presnsiArray[] = "Tidak Hadir";
+                        $presensi += $t;
+                    } else if ($datang != 0 && $pulang != 0) {
+                        $dtg = strtotime($datang);
+                        $plg = strtotime($pulang);
+                        $limd = strtotime($btsd);
+                        $limp = strtotime($btsp);
+
+                        if ($dtg <= $limd && $plg >= $limp) {
+                            $presnsiArray[] = "Hadir";
+                            $presensi += $f;
+                        } else {
+                            $presnsiArray[] = "Telat";
+                            $presensi += $h;
+                        }
+                    } else {
+                        $presnsiArray[] = "Hadir";
+                        $presensi += $h;
+                    }
+                }
+            }
+            array_push($presnsiArray, $presensi);
+            $detailArray[$data->data_peserta] = $presnsiArray;
+        }
+
+        return view('page.detailRekapC', [
+            'list' => $detailArray,
+            'tgls' => $tgllist,
+            'rekap' => $absensi
+        ]);
+    }
 }
+
