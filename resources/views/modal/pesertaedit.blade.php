@@ -1,6 +1,6 @@
 
     <div class="modal-header">
-        <h4 class="modal-title" id="myModalLabel" > Edit Mesin </h4>
+        <h4 class="modal-title" id="myModalLabel" > Edit Pegawai </h4>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
     <div class="modal-body">
@@ -27,18 +27,17 @@
                                     <div class="form-group row">
                                         <label>Jenis Absensi</label>
                                         <select class="form-control" name="type">
-                                            <option value="Karyawan" @if($edit->type != null && $edit->type != "Satpam" && $edit->type != "cs" ) selected @endif >Karyawan</option>
-                                            <option value="Satpam" @if($edit->type == "Satpam") selected @endif >Satpam</option>
-                                            <option value="cs" @if($edit->type == "cs") selected @endif>Cleaning Service</option>
-                                            <option value= '0' @if($edit->type == null ) selected @endif>Tidak Masuk Absen</option>
+                                            <option value="Relawan" @if($edit->type == 'Relawan') selected @endif>Relawan</option>
                                         </select>
                                     </div>
                                     <div class="form-group row">
                                         <label>Jabatan</label>
                                         <select class="form-control" name="jabatan">
-                                            <option value="Dosen" @if($edit->jabatan == "Dosen") selected @endif>Dosen</option>
-                                            <option value="Tendik" @if($edit->jabatan == "Tendik") selected @endif>Tendik</option>
-                                            <option value="Lainnya" @if($edit->jabatan == "Lainnya") selected @endif>Lainnya</option>
+                                            <option value="Ompreng" @if($edit->jabatan == "Ompreng") selected @endif>Ompreng</option>
+                                            <option value="Persiapan" @if($edit->jabatan == "Persiapan") selected @endif>Persiapan</option>
+                                            <option value="Pengolahan" @if($edit->jabatan == "Pengolahan") selected @endif>Pengolahan</option>
+                                            <option value="Pemorsian" @if($edit->jabatan == "Pemorsian") selected @endif>Pemorsian</option>
+                                            <option value="Keamanan" @if($edit->jabatan == "Keamanan") selected @endif>Keamanan</option>
                                         </select>
                                     </div>
          

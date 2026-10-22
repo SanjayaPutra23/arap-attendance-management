@@ -9,7 +9,7 @@
     <div class="c-subheader px-3">
         <ol class="breadcrumb border-0 m-0">
             <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-            <li class="breadcrumb-item">Presensi</li>
+            <li class="breadcrumb-item">Presensi Kebersihan</li>
         </ol>
     </div>
 @endsection
@@ -22,7 +22,7 @@
               <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                 <div class="card">
                     <div class="card-header">
-                      <h3 class="float-left">Rekap Presensi CS</h3>
+                      <h3 class="float-left">Rekap Presensi Kebersihan</h3>
                         <button class="btn btn-outline-primary float-right" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Buat Rekap Presensi Baru</button>
                     </div>
                     <div class="card-body">
@@ -99,6 +99,7 @@
                                     <td> {{ $data->tgl_mulai }} sampai {{ $data->tgl_selesai }}</td>
                                     <td>
                                         <a class="badge badge-info" href="{{ route('cs.show', $data->id) }}" >Lihat Absen</a>
+                                        <a class="badge badge-success" href="{{ route('cs.rekap', $data->id) }}" >Lihat Rekap Absen</a>
                                         <button class="badge badge-danger"
                                                 onclick=" if( confirm('anda Yakin?')) { event.preventDefault();
                                                         document.getElementById('delete-option-form-{{$data->id}}').submit()} else{  event.preventDefault(); }">

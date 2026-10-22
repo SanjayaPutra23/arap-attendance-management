@@ -1,4 +1,4 @@
-@extends('dashboard.base')
+@extends('layouts.app')
 
 @section('css')
 @endsection
@@ -6,9 +6,13 @@
 @section('remah')
     <div class="c-subheader px-3">
         <ol class="breadcrumb border-0 m-0">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{route('absensi.index')}}">Presensi</a></li>
-            <li class="breadcrumb-item">Data Presensi</li>
+            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+            @if(!empty($divisi))
+                <li class="breadcrumb-item"><a href="{{ route('absensi.divisi', $divisi) }}">Presensi {{ ucfirst($divisi) }}</a></li>
+            @else
+                <li class="breadcrumb-item"><a href="{{ route('absensi.index') }}">Presensi Relawan</a></li>
+            @endif
+            <li class="breadcrumb-item active">Data Presensi</li>
         </ol>
     </div>
 @endsection
@@ -21,12 +25,14 @@
                   <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                       <div class="card">
                           <div class="card-header">
-                              <h3 class="float-left">Absensi {{ $absen->type }} {{namabulan($absen->bln)}} {{ $absen->thn }}</h3>
+                              <h3 class="float-left">Absensi {{ $absen->type }} {{namabulan($absen->bln)}} {{ $absen->thn }} @if(!empty($divisi)) - Divisi {{ ucfirst($divisi) }} @endif</h3>
                               <a class="btn btn-outline-primary float-right" href="{{ route('exel.absen', $absen->id) }}">Download Absensi</a>
                           </div>
                           <div class="card-body">
 
-
+                              @if($list->isEmpty())
+                                  <div class="alert alert-info">Belum ada data presensi untuk divisi / periode ini.</div>
+                              @else
                               <div id="sample2">
                               <table class="table table-bordered">
                                   <thead>
@@ -35,6 +41,7 @@
                                       <td rowspan="2">No</td>
                                       <td rowspan="2">Nama</td>
                                       <td rowspan="2">NIK</td>
+                                      <td rowspan="2">Divisi</td>
 
                                           @php $data = $list[0]; $data1 = explode("&",$data->presensi); array_pop($data1); @endphp
                                           @foreach($data1 as $pres)
@@ -55,11 +62,15 @@
                                   </thead>
                                   <tbody>
                                   @foreach($list as $data)
-                                      @php $idn = explode("-",$data->data_peserta); @endphp
+                                      @php 
+                                          $idn = explode("-",$data->data_peserta); 
+                                          $divisiNama = formatDivisi($data->peserta->jabatan ?? ($pesertaMap[$data->id_peserta] ?? null));
+                                      @endphp
                                       <tr>
                                           <td>{{$loop->iteration}}</td>
                                           <td class="table-info" ><a href="{{ route('absensi.user', $data->id) }}" >{{ $idn[0] }} </a></td>
                                           <td class="table-info" >{{$idn[1] }}</td>
+                                          <td class="table-info" >{{ $divisiNama }}</td>
                                           @php $data1 = explode("&",$data->presensi); array_pop($data1) @endphp
 
                                           @foreach($data1 as $pres)
@@ -72,6 +83,7 @@
                                   </tbody>
                               </table>
                               </div>
+                              @endif
                           </div>
                       </div>
                   </div>

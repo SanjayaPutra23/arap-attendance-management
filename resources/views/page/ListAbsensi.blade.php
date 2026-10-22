@@ -9,7 +9,10 @@
     <div class="c-subheader px-3">
         <ol class="breadcrumb border-0 m-0">
             <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-            <li class="breadcrumb-item">Presensi</li>
+            <li class="breadcrumb-item"><a href="{{ route('absensi.index') }}">Presensi Relawan</a></li>
+            @if(!empty($divisi))
+                <li class="breadcrumb-item active">{{ formatDivisi($divisi) }}</li>
+            @endif
         </ol>
     </div>
 @endsection
@@ -22,10 +25,24 @@
               <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                 <div class="card">
                     <div class="card-header">
-                      <h3 class="float-left">Rekap Presensi Pegawai</h3>
+                      <h3 class="float-left">{{ $pageTitle ?? 'Rekap Presensi Relawan' }}</h3>
+                        @if(empty($divisi))
                         <button class="btn btn-outline-primary float-right" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Buat Rekap Presensi Baru</button>
+                        @endif
                     </div>
                     <div class="card-body">
+                        <div class="mb-3">
+                            <div class="btn-group btn-group-sm flex-wrap" role="group">
+                                <a href="{{ route('absensi.index') }}" class="btn {{ empty($divisi) ? 'btn-primary' : 'btn-outline-primary' }}">Semua Relawan</a>
+                                <a href="{{ route('absensi.divisi', 'persiapan') }}" class="btn {{ ($divisi ?? '') == 'persiapan' ? 'btn-primary' : 'btn-outline-primary' }}">Persiapan</a>
+                                <a href="{{ route('absensi.divisi', 'pengolahan') }}" class="btn {{ ($divisi ?? '') == 'pengolahan' ? 'btn-primary' : 'btn-outline-primary' }}">Pengolahan</a>
+                                <a href="{{ route('absensi.divisi', 'pemorsian') }}" class="btn {{ ($divisi ?? '') == 'pemorsian' ? 'btn-primary' : 'btn-outline-primary' }}">Pemorsian</a>
+                                <a href="{{ route('absensi.divisi', 'distribusi') }}" class="btn {{ ($divisi ?? '') == 'distribusi' ? 'btn-primary' : 'btn-outline-primary' }}">Distribusi</a>
+                                <a href="{{ route('absensi.divisi', 'ompreng') }}" class="btn {{ ($divisi ?? '') == 'ompreng' ? 'btn-primary' : 'btn-outline-primary' }}">Ompreng</a>
+                                <a href="{{ route('absensi.divisi', 'keamanan') }}" class="btn {{ ($divisi ?? '') == 'keamanan' ? 'btn-primary' : 'btn-outline-primary' }}">Keamanan</a>
+                                <a href="{{ route('absensi.divisi', 'kebersihan') }}" class="btn {{ ($divisi ?? '') == 'kebersihan' ? 'btn-primary' : 'btn-outline-primary' }}">Kebersihan</a>
+                            </div>
+                        </div>
 
                         <div class="collapse" id="collapseExample">
                             <div class="card card-body">
@@ -98,8 +115,13 @@
                                     <td> {{ namabulan($data->bln) }} {{ $data->thn }}</td>
                                     <td> {{ $data->tgl_mulai }} sampai {{ $data->tgl_selesai }}</td>
                                     <td>
-                                        <a class="badge badge-info" href="{{ route('absensi.show', $data->id) }}" >Lihat Absen</a>
-                                        <a class="badge badge-success" href="{{ route('absensi.rekap', $data->id) }}" >Lihat Rekap Absen</a>
+                                        @if(!empty($divisi))
+                                            <a class="badge badge-info" href="{{ route('absensi.divisi.show', [$divisi, $data->id]) }}" >Lihat Absen</a>
+                                            <a class="badge badge-success" href="{{ route('absensi.divisi.rekap', [$divisi, $data->id]) }}" >Lihat Rekap Absen</a>
+                                        @else
+                                            <a class="badge badge-info" href="{{ route('absensi.show', $data->id) }}" >Lihat Absen</a>
+                                            <a class="badge badge-success" href="{{ route('absensi.rekap', $data->id) }}" >Lihat Rekap Absen</a>
+                                        @endif
                                         <button class="badge badge-danger"
                                                 onclick=" if( confirm('anda Yakin?')) { event.preventDefault();
                                                         document.getElementById('delete-option-form-{{$data->id}}').submit()} else{  event.preventDefault(); }">

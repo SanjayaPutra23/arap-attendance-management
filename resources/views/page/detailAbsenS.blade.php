@@ -1,4 +1,4 @@
-@extends('dashboard.base')
+@extends('layouts.app')
 
 @section('css')
 @endsection

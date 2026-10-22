@@ -25,7 +25,13 @@
                 <div class="card">
                     <div class="card-header">
                       <h3 class="float-left">Daftar Pegawai</h3>
-                        <button class="btn btn-outline-primary float-right" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Tambah Pegawai</button>
+                        <button class="btn btn-outline-primary float-right ml-2" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Tambah Pegawai</button>
+                        <form method="POST" action="{{ route('admin.peserta.sync') }}" class="float-right d-inline" onsubmit="return confirm('Sinkronkan seluruh akun login relawan?')">
+                            @csrf
+                            <button class="btn btn-outline-success" type="submit">
+                                <i class="cil-sync mr-1"></i> Sinkronkan Akun Login
+                            </button>
+                        </form>
                     </div>
                     <div class="card-body">
 
@@ -52,18 +58,17 @@
                                     <div class="form-group row">
                                         <label>Jenis Absensi</label>
                                         <select class="form-control" name="type">
-                                            <option value="Karyawan">Karyawan</option>
-                                            <option value="Satpam">Satpam</option>
-                                            <option value="cs">Cleaning Service</option>
-                                            <option value= '0'>Tidak Masuk Absen</option>
+                                            <option value="Relawan">Relawan</option>
                                         </select>
                                     </div>
                                     <div class="form-group row">
                                         <label>Jabatan</label>
                                         <select class="form-control" name="jabatan">
-                                            <option value="Dosen">Dosen</option>
-                                            <option value="Tendik">Tendik</option>
-                                            <option value="Lainnya">Lainnya</option>
+                                            <option value="Ompreng">Ompreng</option>
+                                            <option value="Persiapan">Persiapan</option>
+                                            <option value="Pengolahan">Pengolahan</option>
+                                            <option value="Pemorsian">Pemorsian</option>
+                                            <option value="Keamanan">Keamanan</option>
                                         </select>
                                     </div>
                                     <button class="btn btn-success float-left" type="submit">Tambah Pegawai Baru</button>

@@ -22,17 +22,15 @@
                 <div class="card">
                     <div class="card-header">
                       <h3 class="float-left">Setting Libur ARAP</h3>
-                        @can('umum')
+                        @canany(['umum', 'akademik'])
                         <div class="btn-group float-right" role="group" aria-label="Button group with nested dropdown">
-                        <a href="{{ route('libur.create') }}" class="btn btn-md btn-info">Tambah Libur</a>
-                         <button type="button" class="btn btn-secondary mr-0 ml-0 pr-0 pl-0" disabled></button>  
-                        <a href="{{ route('libur.add') }}" class="btn btn-md btn-success ">Tarik Data Libur Nasional</a>
+                            <a href="{{ route('libur.create') }}" class="btn btn-md btn-info">Tambah Libur</a>
+                            @can('umum')
+                            <button type="button" class="btn btn-secondary mr-0 ml-0 pr-0 pl-0" disabled></button>  
+                            <a href="{{ route('libur.add') }}" class="btn btn-md btn-success">Tarik Data Libur Nasional</a>
+                            @endcan
                         </div>
-                            @endcan   
-                             @can('akademik')
-                        <div class="btn-group float-right" role="group" aria-label="Button group with nested dropdown">
-                        <a href="{{ route('libur.create') }}" class="btn btn-md btn-info">Tambah Libur</a>
-                        @endcan
+                        @endcanany
 
                     </div>
                     <div class="card-body">
