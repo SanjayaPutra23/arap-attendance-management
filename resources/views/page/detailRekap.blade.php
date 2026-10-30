@@ -30,6 +30,19 @@
                               <a class="btn btn-outline-danger float-right mr-2" href="{{ route('exel.rekaphit', $rekap->id) }}" >Download  Perhitungan Rekap</a>
                           </div>
                           <div class="card-body">
+                              <div class="mb-3">
+                                  <div class="btn-group btn-group-sm flex-wrap" role="group">
+                                      <a href="{{ route('absensi.rekap', $rekap->id) }}" class="btn {{ empty($divisi) ? 'btn-primary' : 'btn-outline-primary' }}">Semua Relawan</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['persiapan', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'persiapan' ? 'btn-primary' : 'btn-outline-primary' }}">Persiapan</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['pengolahan', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'pengolahan' ? 'btn-primary' : 'btn-outline-primary' }}">Pengolahan</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['pemorsian', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'pemorsian' ? 'btn-primary' : 'btn-outline-primary' }}">Pemorsian</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['distribusi', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'distribusi' ? 'btn-primary' : 'btn-outline-primary' }}">Distribusi</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['ompreng', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'ompreng' ? 'btn-primary' : 'btn-outline-primary' }}">Ompreng</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['keamanan', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'keamanan' ? 'btn-primary' : 'btn-outline-primary' }}">Keamanan</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['kebersihan', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'kebersihan' ? 'btn-primary' : 'btn-outline-primary' }}">Kebersihan</a>
+                                      <a href="{{ route('absensi.divisi.rekap', ['officer', $rekap->id]) }}" class="btn {{ ($divisi ?? '') == 'officer' ? 'btn-primary' : 'btn-outline-primary' }}">Officer</a>
+                                  </div>
+                              </div>
 
                               @if(empty($list) || count($list) == 0)
                                   <div class="alert alert-info">Belum ada data rekap presensi untuk divisi / periode ini.</div>

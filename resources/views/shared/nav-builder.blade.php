@@ -56,6 +56,10 @@
                         <span class="cil-fingerprint c-sidebar-nav-icon"></span>Absensi Relawan</a>
                 </li>
                 <li class="c-sidebar-nav-item">
+                    <a class="c-sidebar-nav-link" href="{{ route('absensi.officer') }}">
+                        <span class="cil-fingerprint c-sidebar-nav-icon"></span>Absensi Officer</a>
+                </li>
+                <li class="c-sidebar-nav-item">
                     <a class="c-sidebar-nav-link" href="{{ route('absensi.divisi', 'persiapan') }}">
                         <span class="cil-fingerprint c-sidebar-nav-icon"></span>Absensi Persiapan</a>
                 </li>

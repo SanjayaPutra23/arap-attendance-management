@@ -27,8 +27,8 @@ class UpdatePesertaRequest extends FormRequest
             return [
                 'name' => 'required|max:255',
                 'nik' => 'required|max:255',
-                'type' => 'required|in:Relawan',
-                'jabatan' => 'required|in:Ompreng,Persiapan,Pengolahan,Pemorsian,Keamanan',
+                'type' => 'required|in:Relawan,relawan',
+                'jabatan' => 'required|in:Ompreng,ompreng,Persiapan,persiapan,Pengolahan,pengolahan,Pemorsian,pemorsian,Distribusi,distribusi,Keamanan,keamanan,scurity,Officer,officer',
             ];
         }
 

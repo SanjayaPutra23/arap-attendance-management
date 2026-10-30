@@ -110,6 +110,7 @@ Route::post('/pool/upload/', [PoolController::class, 'upload'])->middleware(['au
 Route::get('/pur', [PoolController::class, 'purage'])->middleware(['auth', 'can:umum'])->name('pur.pool');
 
 Route::resource('/absensi', AbsensiController::class)->middleware(['auth', 'can:umum']);
+Route::get('/absensi/officer', [AbsensiController::class, 'officerIndex'])->middleware(['auth', 'can:umum'])->name('absensi.officer');
 Route::get('/absensi/divisi/{divisi}', [AbsensiController::class, 'divisiIndex'])->middleware(['auth', 'can:umum'])->name('absensi.divisi');
 Route::get('/absensi/divisi/{divisi}/show/{absensi}', [AbsensiController::class, 'divisiShow'])->middleware(['auth', 'can:umum'])->name('absensi.divisi.show');
 Route::get('/absensi/divisi/{divisi}/rekap/{absensi}', [AbsensiController::class, 'divisiRekap'])->middleware(['auth', 'can:umum'])->name('absensi.divisi.rekap');

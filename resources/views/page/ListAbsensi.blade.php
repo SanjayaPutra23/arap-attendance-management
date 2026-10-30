@@ -41,6 +41,7 @@
                                 <a href="{{ route('absensi.divisi', 'ompreng') }}" class="btn {{ ($divisi ?? '') == 'ompreng' ? 'btn-primary' : 'btn-outline-primary' }}">Ompreng</a>
                                 <a href="{{ route('absensi.divisi', 'keamanan') }}" class="btn {{ ($divisi ?? '') == 'keamanan' ? 'btn-primary' : 'btn-outline-primary' }}">Keamanan</a>
                                 <a href="{{ route('absensi.divisi', 'kebersihan') }}" class="btn {{ ($divisi ?? '') == 'kebersihan' ? 'btn-primary' : 'btn-outline-primary' }}">Kebersihan</a>
+                                <a href="{{ route('absensi.divisi', 'officer') }}" class="btn {{ ($divisi ?? '') == 'officer' ? 'btn-primary' : 'btn-outline-primary' }}">Officer</a>
                             </div>
                         </div>
 

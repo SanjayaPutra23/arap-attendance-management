@@ -68,7 +68,9 @@
                                             <option value="Persiapan">Persiapan</option>
                                             <option value="Pengolahan">Pengolahan</option>
                                             <option value="Pemorsian">Pemorsian</option>
+                                            <option value="Distribusi">Distribusi</option>
                                             <option value="Keamanan">Keamanan</option>
+                                            <option value="Officer">Officer</option>
                                         </select>
                                     </div>
                                     <button class="btn btn-success float-left" type="submit">Tambah Pegawai Baru</button>

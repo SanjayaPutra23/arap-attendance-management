@@ -29,6 +29,19 @@
                               <a class="btn btn-outline-primary float-right" href="{{ route('exel.absen', $absen->id) }}">Download Absensi</a>
                           </div>
                           <div class="card-body">
+                              <div class="mb-3">
+                                  <div class="btn-group btn-group-sm flex-wrap" role="group">
+                                      <a href="{{ route('absensi.show', $absen->id) }}" class="btn {{ empty($divisi) ? 'btn-primary' : 'btn-outline-primary' }}">Semua Relawan</a>
+                                      <a href="{{ route('absensi.divisi.show', ['persiapan', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'persiapan' ? 'btn-primary' : 'btn-outline-primary' }}">Persiapan</a>
+                                      <a href="{{ route('absensi.divisi.show', ['pengolahan', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'pengolahan' ? 'btn-primary' : 'btn-outline-primary' }}">Pengolahan</a>
+                                      <a href="{{ route('absensi.divisi.show', ['pemorsian', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'pemorsian' ? 'btn-primary' : 'btn-outline-primary' }}">Pemorsian</a>
+                                      <a href="{{ route('absensi.divisi.show', ['distribusi', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'distribusi' ? 'btn-primary' : 'btn-outline-primary' }}">Distribusi</a>
+                                      <a href="{{ route('absensi.divisi.show', ['ompreng', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'ompreng' ? 'btn-primary' : 'btn-outline-primary' }}">Ompreng</a>
+                                      <a href="{{ route('absensi.divisi.show', ['keamanan', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'keamanan' ? 'btn-primary' : 'btn-outline-primary' }}">Keamanan</a>
+                                      <a href="{{ route('absensi.divisi.show', ['kebersihan', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'kebersihan' ? 'btn-primary' : 'btn-outline-primary' }}">Kebersihan</a>
+                                      <a href="{{ route('absensi.divisi.show', ['officer', $absen->id]) }}" class="btn {{ ($divisi ?? '') == 'officer' ? 'btn-primary' : 'btn-outline-primary' }}">Officer</a>
+                                  </div>
+                              </div>
 
                               @if($list->isEmpty())
                                   <div class="alert alert-info">Belum ada data presensi untuk divisi / periode ini.</div>

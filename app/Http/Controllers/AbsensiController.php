@@ -39,10 +39,15 @@ class AbsensiController extends Controller
         ]);
     }
 
+    public function officerIndex()
+    {
+        return $this->divisiIndex('officer');
+    }
+
     public function divisiIndex($divisi)
     {
         $divisi = strtolower($divisi);
-        $validDivisi = ['persiapan', 'pengolahan', 'pemorsian', 'distribusi', 'ompreng', 'keamanan', 'kebersihan'];
+        $validDivisi = ['persiapan', 'pengolahan', 'pemorsian', 'distribusi', 'ompreng', 'keamanan', 'kebersihan', 'officer'];
         if (!in_array($divisi, $validDivisi)) {
             return redirect()->route('absensi.index')->with('msg', 'danger-Divisi tidak ditemukan');
         }
@@ -446,8 +451,12 @@ class AbsensiController extends Controller
     public function show(Absensi $absensi)
     {
         $list_tgl = dateRange($absensi->tgl_mulai, $absensi->tgl_selesai);
+        $officerUids = $this->getUidsByDivisi('officer');
         $detailArray = DetailAbsen::with('peserta')
             ->where('id_absen', $absensi->id)
+            ->when($officerUids->isNotEmpty(), function ($q) use ($officerUids) {
+                $q->whereNotIn('id_peserta', $officerUids);
+            })
             ->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")
             ->get();
 
@@ -543,6 +552,11 @@ class AbsensiController extends Controller
         if ($divisi) {
             $uids = $this->getUidsByDivisi($divisi);
             $query->whereIn('id_peserta', $uids);
+        } else {
+            $officerUids = $this->getUidsByDivisi('officer');
+            if ($officerUids->isNotEmpty()) {
+                $query->whereNotIn('id_peserta', $officerUids);
+            }
         }
         $dataAbsen = $query->orderByRaw("CASE WHEN LOWER(data_peserta) LIKE '%riski%' THEN 1 ELSE 0 END, id ASC")->get();
         $displayDivisi = $divisi ? formatDivisi($divisi) : null;
