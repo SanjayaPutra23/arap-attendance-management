@@ -7,7 +7,7 @@
     </li>
 
     <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Fitur Presensi Mobile GPS & Selfie akan aktif di Phase 4'); return false;">
+        <a href="{{ route('mobile-attendance.index') }}" class="nav-link {{ request()->routeIs('mobile-attendance.index') ? 'active' : '' }}">
             <i class="bi bi-camera-fill text-primary"></i>
             <span>Presensi Mobile</span>
             <span class="badge bg-success ms-auto" style="font-size: 0.65rem;">PWA</span>
@@ -15,8 +15,8 @@
     </li>
 
     <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Modul Riwayat Kehadiran sedang disiapkan'); return false;">
-            <i class="bi bi-calendar-check"></i>
+        <a href="{{ route('mobile-attendance.history') }}" class="nav-link {{ request()->routeIs('mobile-attendance.history') ? 'active' : '' }}">
+            <i class="bi bi-calendar-check text-success"></i>
             <span>Riwayat Kehadiran</span>
         </a>
     </li>

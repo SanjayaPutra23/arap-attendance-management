@@ -64,6 +64,21 @@ Cakupan pengujian meliputi:
 - Autentikasi email dan logout pengguna
 - Autentikasi menggunakan nomor identitas (NIK / UID relawan)
 - Otorisasi hak akses Role-Based Access Control (RBAC) Gates (`ultraman`, `umum`, `staff-access`, `user`)
+- Formula Geofencing Haversine, radius, dan validasi akurasi GPS
+- Kompresi foto selfie via `ext-gd` dan hashing SHA-256 ke private disk `attendance_photos`
+- Aturan perhitungan jam kerja per divisi/jabatan dan sistem poin (1.00 / 0.80 / 0.00)
+- Alur lengkap Check-in, Check-out, Anti-duplikasi, dan Audit Log
+- Proteksi otorisasi foto privat (Anti-IDOR)
+
+---
+
+## 📱 Fitur Mobile Attendance (PWA)
+
+Sistem Mobile Attendance ARAP v2 mendukung check-in dan check-out mandiri untuk Relawan & Officer SPPG Kalisapu:
+1. **Validasi Geofence & GPS:** Menghitung jarak presisi ke titik sentral SPPG Kalisapu (default radius 100m, akurasi GPS maksimal 50m).
+2. **Kamera Selfie Langsung (Anti-Galeri):** Mewajibkan pengambilan foto dari WebRTC live camera (`getUserMedia`) tanpa akses input galeri file.
+3. **Persyaratan Secure Context:** Fitur kamera dan sensor geolokasi GPS browser memerlukan koneksi aman (**`http://localhost`** untuk development lokal, atau **`https://` dengan sertifikat SSL valid** pada lingkungan server staging/produksi).
+4. **Keamanan Foto Privat:** Foto presensi tersimpan di private disk `attendance_photos` dan hanya dapat diakses oleh pemilik presensi serta staf/admin yang terotorisasi.
 
 ---
 

@@ -1,5 +1,8 @@
 import * as bootstrap from 'bootstrap';
+import L from 'leaflet';
+
 window.bootstrap = bootstrap;
+window.L = L;
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
