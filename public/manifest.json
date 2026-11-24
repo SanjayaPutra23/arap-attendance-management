@@ -1,0 +1,17 @@
+{
+  "name": "ARAP — Presensi SPPG Kalisapu",
+  "short_name": "ARAP",
+  "description": "Aplikasi Presensi Relawan dan Pegawai SPPG Kalisapu",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

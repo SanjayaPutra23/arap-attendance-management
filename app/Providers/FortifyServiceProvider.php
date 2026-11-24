@@ -2,58 +2,35 @@
 
 namespace App\Providers;
 
-use App\Actions\Fortify\CreateNewUser;
-use App\Actions\Fortify\ResetUserPassword;
-use App\Actions\Fortify\UpdateUserPassword;
-use App\Actions\Fortify\UpdateUserProfileInformation;
-use App\Models\Option;
 use App\Models\User;
-use App\Models\Peserta;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         //
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        Fortify::createUsersUsing(CreateNewUser::class);
-        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
-        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
-        Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
-        Fortify::registerView(function () {
-            $type = Option::where('list','1')->get();
-            return view('auth.register',['type'=> $type]);
-        });
-        Fortify::loginView(function (){
+        Fortify::loginView(function () {
             return view('auth.login');
         });
-        Fortify::resetPasswordView(function ($request){
-            return view('auth.passwords.reset',['request'=> $request]);
-        });
-        Fortify::requestPasswordResetLinkView(function (){
-            return view('auth.passwords.email');
-        });
 
-        // Autentikasi fleksibel: mendukung E-Mail (Admin/Staff) maupun UID / NIK (Relawan/Pegawai)
+        // Autentikasi fleksibel: mendukung Email maupun NIK (Relawan / Pegawai)
         Fortify::authenticateUsing(function (Request $request) {
             $login = trim((string) $request->input('email'));
             $password = (string) $request->input('password');
@@ -67,9 +44,9 @@ class FortifyServiceProvider extends ServiceProvider
                 ->orWhere('nik', $login)
                 ->first();
 
-            // 2. Jika belum ditemukan, periksa apakah input cocok dengan UID/NIK di tabel pesertas
-            if (!$user) {
-                $peserta = Peserta::where('nik', $login)
+            // 2. Jika belum ditemukan dan model Peserta ada, cari via relasi peserta
+            if (!$user && class_exists(\App\Models\Peserta::class)) {
+                $peserta = \App\Models\Peserta::where('nik', $login)
                     ->orWhere('uid', $login)
                     ->first();
                 if ($peserta) {
@@ -85,11 +62,9 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)->by($request->email.$request->ip());
-        });
+            $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
 
-        RateLimiter::for('two-factor', function (Request $request) {
-            return Limit::perMinute(5)->by($request->session()->get('login.id'));
+            return Limit::perMinute(5)->by($throttleKey);
         });
     }
 }

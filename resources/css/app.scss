@@ -1,0 +1,104 @@
+// Bootstrap 5 & Icons & Leaflet
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "leaflet/dist/leaflet.css";
+
+/* Custom ARAP SPPG Kalisapu Theme & Variables */
+:root {
+    --arap-primary: #1e3a8a;
+    --arap-primary-dark: #172554;
+    --arap-secondary: #0d9488;
+    --arap-accent: #f59e0b;
+    --arap-bg: #f8fafc;
+    --arap-card-border: #e2e8f0;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+    background-color: var(--arap-bg);
+    color: #1e293b;
+    min-height: 100vh;
+}
+
+.bg-primary-arap {
+    background-color: var(--arap-primary) !important;
+}
+
+.text-primary-arap {
+    color: var(--arap-primary) !important;
+}
+
+.border-primary-arap {
+    border-color: var(--arap-primary) !important;
+}
+
+.btn-primary-arap {
+    background-color: var(--arap-primary);
+    border-color: var(--arap-primary);
+    color: #ffffff;
+}
+
+.btn-primary-arap:hover,
+.btn-primary-arap:focus {
+    background-color: var(--arap-primary-dark);
+    border-color: var(--arap-primary-dark);
+    color: #ffffff;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 260px;
+    background: #ffffff;
+    border-right: 1px solid var(--arap-card-border);
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link {
+    color: #475569;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    margin: 0.2rem 0.75rem;
+    padding: 0.65rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    color: var(--arap-primary);
+    background-color: #eff6ff;
+    font-weight: 600;
+}
+
+.sidebar .nav-link i {
+    font-size: 1.25rem;
+}
+
+/* Topbar & Header */
+.topbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--arap-card-border);
+    padding: 0.75rem 1.5rem;
+}
+
+/* Card Improvements */
+.card-dashboard {
+    border-radius: 0.75rem;
+    border: 1px solid var(--arap-card-border);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+/* Auth Cards */
+.auth-card {
+    border-radius: 1rem;
+    border: 1px solid var(--arap-card-border);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}

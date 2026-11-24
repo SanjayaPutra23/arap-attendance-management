@@ -1,70 +1,30 @@
-# Laravel standard ignore
-vendor
-node_modules
-public/storage
-storage/*.key
+*.log
+.DS_Store
 .env
-.env.*
 .env.backup
 .env.production
+.phpactor.json
 .phpunit.result.cache
-
-# Database dumps & SQL backups (Keamanan Data & Privasi)
-*.sql
-*.sqlite
-*.bak
-database_sql/
-storage/backup*
-storage/backup_fase3/
-storage/backup_perbaikan/
-
-# Uploaded sensitive documents & health files (Surat Dokter Relawan)
-storage/app/public/surat_dokter/*
-!storage/app/public/surat_dokter/.gitkeep
-storage/app/public/avatars/*
-!storage/app/public/avatars/.gitkeep
-
-# Atomic sync locks
-storage/framework/locks/*
-!storage/framework/locks/.gitkeep
-
-# Laravel log & cache
-storage/logs/*
-storage/logs/laravel.log
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-storage/framework/testing/*
-!storage/.gitignore
-!storage/logs/.gitignore
-!storage/framework/.gitignore
-
-# Cache & Temporary files
-*.log
-*.cache
-*.tmp
-scratch/
-
-# IDE & Editor
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-
-# OS-specific
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Assets
-public/hot
-public/assets/img/*
-!public/assets/img/.gitkeep
-!public/assets/img/avatars/
-public/assets/img/avatars/*
-!public/assets/img/avatars/default.png
-
-# Docker & Homestead
-docker-compose.override.yml
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
 Homestead.json
 Homestead.yaml
+Thumbs.db
+
+/storage/app/private/*
+!/storage/app/private/.gitkeep

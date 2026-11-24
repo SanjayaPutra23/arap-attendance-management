@@ -1,0 +1,4 @@
+*
+!.gitignore
+!attendance_photos/
+!attendance_photos/.gitkeep

@@ -2,28 +2,40 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         //
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        Paginator::useBootstrap();
+        // RBAC Gates compatible with legacy and v2 requirements
+        Gate::define('ultraman', function (User $user) {
+            return $user->hasAnyRoles(['Ultraman', 'ultraman']);
+        });
+
+        Gate::define('umum', function (User $user) {
+            return $user->hasAnyRoles(['Umum', 'Ultraman']);
+        });
+
+        Gate::define('staff-access', function (User $user) {
+            return $user->hasAnyRoles(['Umum', 'Akademik', 'Ultraman', 'Officer', 'Tata Usaha']);
+        });
+
+        Gate::define('user', function (User $user) {
+            return $user->hasAnyRoles(['User', 'Ultraman', 'Umum', 'Officer', 'Tata Usaha', 'Relawan']);
+        });
     }
 }

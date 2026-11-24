@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'name',
@@ -30,9 +30,9 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for arrays.
+     * The attributes that should be hidden for serialization.
      *
-     * @var array
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -40,47 +40,30 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be cast to native types.
+     * Get the attributes that should be cast.
      *
-     * @var array
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
-
-    public function peserta()
+    protected function casts(): array
     {
-        return $this->belongsTo(Peserta::class, 'peserta_id');
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 
-    public function permohonanIzins()
-    {
-        return $this->hasMany(PermohonanIzin::class, 'user_id');
-    }
-
+    /**
+     * Relasi ke Role (Many to Many).
+     */
     public function roles()
     {
-        return $this->belongsToMany('App\Models\Role');
+        return $this->belongsToMany(Role::class);
     }
 
     /**
-     * URL Avatar pengguna: foto kustom jika ada, atau avatar SVG deterministik berbasis identitas akun
+     * Cek apakah user memiliki 1 role tertentu (case-insensitive).
      */
-    public function getAvatarUrlAttribute()
-    {
-        if ($this->avatar && $this->avatar !== 'default.png' && file_exists(public_path('assets/img/avatars/' . $this->avatar))) {
-            return asset('assets/img/avatars/' . $this->avatar);
-        }
-
-        return route('avatar.svg', $this->id);
-    }
-
-    /**
-     * mengecek apakah user punya role (1role)
-     * @param string $role
-     * @return bool
-     */
-    public function hasAnyRole(string $role)
+    public function hasAnyRole(string $role): bool
     {
         return $this->roles->contains(function ($r) use ($role) {
             return strcasecmp($r->name, $role) === 0;
@@ -88,15 +71,25 @@ class User extends Authenticatable
     }
 
     /**
-     * chek user nya punya beberapa role atau tidak
-     * @param array $role
-     * @return bool
+     * Alias hasRole untuk kemudahan pemanggilan.
      */
-    public function hasAnyRoles(array $role)
+    public function hasRole(string $role): bool
     {
-        $lowerRoles = array_map('strtolower', $role);
+        return $this->hasAnyRole($role);
+    }
+
+    /**
+     * Cek apakah user memiliki salah satu dari daftar role yang diberikan.
+     */
+    public function hasAnyRoles(array|string $roles): bool
+    {
+        if (is_string($roles)) {
+            return $this->hasAnyRole($roles);
+        }
+
+        $lowerRoles = array_map('strtolower', $roles);
         return $this->roles->contains(function ($r) use ($lowerRoles) {
-            return in_array(strtolower($r->name), $lowerRoles);
+            return in_array(strtolower($r->name), $lowerRoles, true);
         });
     }
 }
