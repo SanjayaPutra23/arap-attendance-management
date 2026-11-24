@@ -30,13 +30,41 @@
 
     @can('staff-access')
     <li class="nav-header px-3 pt-3 pb-1 text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-        Administrasi & Laporan
+        Administrasi & Monitoring
     </li>
 
     <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Modul Rekapitulasi Periode 20-19 akan aktif di Phase 5'); return false;">
+        <a href="{{ route('admin.monitoring.index') }}" class="nav-link {{ request()->routeIs('admin.monitoring.*') ? 'active' : '' }}">
+            <i class="bi bi-display text-primary"></i>
+            <span>Monitoring Presensi</span>
+            <span class="badge bg-danger ms-auto" style="font-size: 0.65rem;">Live</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="#" class="nav-link text-secondary" onclick="alert('Modul Rekapitulasi Periode 20-19 akan aktif di Phase 5B'); return false;">
             <i class="bi bi-file-earmark-spreadsheet text-success"></i>
             <span>Rekapitulasi (20-19)</span>
+        </a>
+    </li>
+    @endcan
+
+    @can('umum')
+    <li class="nav-header px-3 pt-3 pb-1 text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+        Pengaturan SPPG
+    </li>
+
+    <li class="nav-item">
+        <a href="{{ route('admin.settings.locations.index') }}" class="nav-link {{ request()->routeIs('admin.settings.locations.*') ? 'active' : '' }}">
+            <i class="bi bi-pin-map text-danger"></i>
+            <span>Lokasi Geofence</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{{ route('admin.settings.working-hours.index') }}" class="nav-link {{ request()->routeIs('admin.settings.working-hours.*') ? 'active' : '' }}">
+            <i class="bi bi-clock-history text-warning"></i>
+            <span>Jam Kerja Divisi</span>
         </a>
     </li>
     @endcan
