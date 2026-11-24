@@ -23,6 +23,8 @@
    - 2.7 [Verifikasi & Persetujuan Permohonan Izin / Sakit](#27-verifikasi--persetujuan-permohonan-izin--sakit)
    - 2.8 [Membuka Arsip Log Fingerprint Mesin Lama (9.838 Data Pools)](#28-membuka-arsip-log-fingerprint-mesin-lama-9838-data-pools)
    - 2.9 [Mencetak Rekapitulasi Kehadiran Bulanan 20–19 (Excel & PDF Resmi)](#29-mencetak-rekapitulasi-kehadiran-bulanan-2019-excel--pdf-resmi)
+   - 2.10 [Kelola Mesin Fingerprint (IP & Port) & Tarik Data Presensi ZKTeco](#210-kelola-mesin-fingerprint-ip--port--tarik-data-presensi-zkteco)
+   - 2.11 [Pengaturan Mode Rekapitulasi Presensi (Bulanan 20–19 vs Mingguan)](#211-pengaturan-mode-rekapitulasi-presensi-bulanan-2019-vs-mingguan)
 
 ---
 
@@ -230,3 +232,44 @@ Sistem penggajian dan rekapitulasi SPPG Kalisapu menerapkan siklus cut-off **tan
 6. **Ekspor Dokumen PDF Resmi:**
    - Ketuk tombol merah **Cetak PDF**.
    - Dokumen PDF format **Landscape A4** akan terbuat otomatis dengan Kop Resmi **Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu**, tabel komprehensif, serta kolom tanda tangan untuk **Pak Aslap (Pengelola SPPG)** dan **Petugas Tata Usaha**.
+
+---
+
+### 2.10 Kelola Mesin Fingerprint (IP & Port) & Tarik Data Presensi ZKTeco
+ARAP v2 mendukung operasional **Hybrid Attendance** (Mobile Attendance + Mesin Fingerprint ZKTeco) untuk mengakomodasi perangkat fisik di lokasi dapur (seperti `FPDAPUR1` di IP `192.168.1.8:4370`). Fitur ini dapat diakses pada menu **Kelola Mesin & Sync** (`/admin/mesin`):
+
+1. **Daftar Mesin & Status Terakhir:**
+   - Menampilkan seluruh mesin terdaftar, tipe koneksi (IP / UDP Port 4370 atau USB Flashdisk), alamat IP, port, grup, dan waktu sinkronisasi terakhir.
+2. **Cek Koneksi Mesin (Ping UDP & Handshake):**
+   - Klik tombol **Check Koneksi** pada kartu mesin IP.
+   - Sistem akan melakukan handshake UDP langsung ke mesin fingerprint, menampilkan indikator latensi respon (ms) dan nama model perangkat tanpa mengganggu operasional mesin.
+3. **Tarik Data / Sinkronkan Data Mesin ke Database:**
+   - **Tarik Mesin Tertentu:** Klik tombol **Sinkronkan Data** pada baris mesin yang diinginkan.
+   - **Tarik Semua Mesin Sekaligus:** Klik tombol **Sinkronkan Semua Mesin IP** di bagian atas halaman.
+   - **Mekanisme Anti-Duplikasi & Atomic Lock:**
+     - Sistem menggunakan *file lock* atomik sehingga proses penarikan tidak akan berjalan ganda jika tombol diklik berulang kali.
+     - Penarikan data menggunakan *cutoff timestamp* otomatis (hanya menarik data baru setelah log terakhir di database) dan composite key `mesin_id|iduser|timestamp|type` sehingga tidak ada duplikasi data di tabel `pools`.
+4. **Impor Log Presensi via Flashdisk USB (`.dat`):**
+   - Jika mesin tidak terhubung ke kabel LAN/WiFi, unduh file log presensi dari mesin ke USB Flashdisk (biasanya berupa file `1_attlog.dat` atau `attlog.dat`).
+   - Pada halaman Kelola Mesin, klik tombol **Upload Log USB (.dat)** pada mesin terkait.
+   - Pilih berkas `.dat` dan klik **Unggah & Simpan ke Pools**. Log akan langsung diekstrak dan disaring anti-duplikasi.
+5. **Sinkronisasi Otomatis Terjadwal (Cron / CLI):**
+   - Administrator server dapat menjadwalkan penarikan data berkala tanpa membuka web browser menggunakan perintah Artisan:
+     ```bash
+     php artisan arap:sync-machine
+     ```
+   - Untuk memaksa penarikan seluruh data mesin tertentu:
+     ```bash
+     php artisan arap:sync-machine --mesin=12 --force
+     ```
+
+---
+
+### 2.11 Pengaturan Mode Rekapitulasi Presensi (Bulanan 20–19 vs Mingguan)
+Administrator dapat menentukan mode periode rekapitulasi kehadiran yang aktif di seluruh sistem:
+1. Buka menu **Mode Rekapitulasi** (`/admin/settings/rekap-mode`).
+2. Tersedia dua pilihan mode:
+   - **Bulanan (Siklus 20–19):** Periode berjalan dari tanggal 20 bulan sebelumnya hingga tanggal 19 bulan ini (standar penggajian operasional SPPG Kalisapu).
+   - **Mingguan (Senin–Minggu):** Periode rekapitulasi berbasis mingguan dari hari Senin hingga Minggu pekan berjalan.
+3. Klik **Simpan Pengaturan Mode**.
+4. Mode yang dipilih akan otomatis menjadi default pada tampilan Rekapitulasi Admin dan tampilan Riwayat Presensi Relawan/Pegawai.

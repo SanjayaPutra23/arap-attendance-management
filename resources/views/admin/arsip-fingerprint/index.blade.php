@@ -15,7 +15,12 @@
                 Data historis tap mesin presensi fisik dapur SPPG Kalisapu (read-only) sebagai sumber arsip dan rujukan rekapitulasi.
             </p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            @can('umum')
+            <a href="{{ route('admin.mesin.index') }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-hdd-network me-1"></i> Kelola Mesin & Tarik Data
+            </a>
+            @endcan
             <span class="badge bg-secondary-subtle text-secondary border px-3 py-2">
                 <i class="bi bi-lock-fill me-1"></i> Data Historis Terkunci (Read-Only)
             </span>

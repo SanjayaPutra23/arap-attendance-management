@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminIzinController;
 use App\Http\Controllers\Admin\ArsipFingerprintController;
 use App\Http\Controllers\Admin\AttendanceLocationController;
+use App\Http\Controllers\Admin\MesinController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Admin\RekapController;
@@ -70,6 +71,18 @@ Route::middleware('auth')->group(function () {
 
             // Approval / Review Izin
             Route::post('/izin/{permohonanIzin}/review', [AdminIzinController::class, 'review'])->name('izin.review');
+
+            // Kelola Mesin Fingerprint & Tarik Data ZKTeco
+            Route::prefix('mesin')->name('mesin.')->group(function () {
+                Route::get('/', [MesinController::class, 'index'])->name('index');
+                Route::post('/', [MesinController::class, 'store'])->name('store');
+                Route::post('/sync-all', [MesinController::class, 'syncAll'])->name('sync-all');
+                Route::put('/{mesin}', [MesinController::class, 'update'])->name('update');
+                Route::delete('/{mesin}', [MesinController::class, 'destroy'])->name('destroy');
+                Route::post('/{mesin}/check-connection', [MesinController::class, 'checkConnection'])->name('check-connection');
+                Route::post('/{mesin}/sync', [MesinController::class, 'sync'])->name('sync');
+                Route::post('/{mesin}/upload-usb', [MesinController::class, 'uploadUsb'])->name('upload-usb');
+            });
 
             // Settings: Geofence Locations & Working Hours
             Route::prefix('settings')->name('settings.')->group(function () {

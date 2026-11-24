@@ -76,6 +76,13 @@
     </li>
 
     <li class="nav-item">
+        <a href="{{ route('admin.mesin.index') }}" class="nav-link {{ request()->routeIs('admin.mesin.*') ? 'active' : '' }}">
+            <i class="bi bi-hdd-network text-info"></i>
+            <span>Kelola Mesin & Sync</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
         <a href="{{ route('admin.settings.locations.index') }}" class="nav-link {{ request()->routeIs('admin.settings.locations.*') ? 'active' : '' }}">
             <i class="bi bi-pin-map text-danger"></i>
             <span>Lokasi Geofence</span>

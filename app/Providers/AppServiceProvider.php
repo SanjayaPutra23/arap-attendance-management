@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\ZKTeco\ZKTecoClient;
+use App\Services\ZKTeco\ZKTecoClientInterface;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -15,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ZKTecoClientInterface::class, ZKTecoClient::class);
     }
 
     /**
