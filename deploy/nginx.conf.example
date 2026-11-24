@@ -1,0 +1,125 @@
+# ==============================================================================
+# Nginx Virtual Host Configuration Template for ARAP v2 (Production)
+# Sentra Pelayanan Pemenuhan Gizi (SPPG) Kalisapu
+# ==============================================================================
+# Salin konfigurasi ini ke /etc/nginx/sites-available/arap
+# lalu aktifkan via symlink ke /etc/nginx/sites-enabled/arap
+#
+# Sesuaikan:
+# 1. server_name presensi.sppgkalisapu.id (ganti dengan domain aktual Anda)
+# 2. root /var/www/arap-v2/public;
+# 3. Path fastcgi_pass php8.5-fpm (socket atau 127.0.0.1:9000)
+# 4. Sertifikat SSL Let's Encrypt / Certbot
+# ==============================================================================
+
+# 1. HTTP Redirect to HTTPS (Wajib untuk Secure Context Kamera & Geofence GPS PWA)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name presensi.sppgkalisapu.id;
+
+    # Let's Encrypt ACME challenge location
+    location /.well-known/acme-challenge/ {
+        root /var/www/arap-v2/public;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# 2. HTTPS Main Server Block
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name presensi.sppgkalisapu.id;
+
+    root /var/www/arap-v2/public;
+    index index.php index.html;
+
+    # Karakter dan batas unggah berkas (foto selfie & lampiran surat izin)
+    charset utf-8;
+    client_max_body_size 10M;
+
+    # SSL / TLS Settings (Disarankan Let's Encrypt Certbot)
+    ssl_certificate /etc/letsencrypt/live/presensi.sppgkalisapu.id/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/presensi.sppgkalisapu.id/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    # Enterprise Security Headers (Diselaraskan dengan SecurityHeaders Middleware)
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(self), geolocation=(self), microphone=()" always;
+
+    # Log files
+    access_log /var/log/nginx/arap_access.log combined;
+    error_log  /var/log/nginx/arap_error.log warn;
+
+    # Caching untuk aset statis hasil kompilasi Vite (js, css, fonts, images)
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg|webp)$ {
+        expires 6M;
+        access_log off;
+        add_header Cache-Control "public, max-age=15552000, immutable";
+    }
+
+    # Penanganan Service Worker PWA (Jangan di-cache agresif agar pembaruan cepat masuk)
+    location = /sw.js {
+        expires -1;
+        access_log off;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    location = /manifest.json {
+        expires 1d;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    # Laravel Front Controller
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # Endpoint Healthcheck bawaan Laravel
+    location = /up {
+        try_files $uri /index.php?$query_string;
+        access_log off;
+    }
+
+    # Eksekusi PHP 8.5 via FPM
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/run/php/php8.5-fpm.sock;
+        # Alternatif jika menggunakan TCP port:
+        # fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param HTTP_X_FORWARDED_PROTO https;
+        fastcgi_param HTTPS on;
+        fastcgi_buffer_size 16k;
+        fastcgi_buffers 4 16k;
+        fastcgi_connect_timeout 60;
+        fastcgi_send_timeout 180;
+        fastcgi_read_timeout 180;
+    }
+
+    # BLOKIR AKSES PUBLIK KE BERKAS SENSITIF & STORAGE
+    location ~ /\.(?!well-known).* {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Blokir akses langsung ke storage privat atau backup
+    location ~ ^/(storage/app/private|database|deploy|docs)/ {
+        deny all;
+        return 404;
+    }
+}

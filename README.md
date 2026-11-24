@@ -4,6 +4,18 @@ ARAP (Aplikasi Relawan & Pegawai) versi 2 merupakan modernisasi menyeluruh siste
 
 ---
 
+## 📚 Dokumentasi Resmi Proyek
+
+| Dokumen | Deskripsi | Tautan Berkas |
+| :--- | :--- | :---: |
+| **Panduan Deployment** | Panduan server Linux, Nginx HTTPS, migrasi DB non-destruktif, UAT fisik, & rollback | [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md) |
+| **Manual Pengguna & Admin** | Panduan operasional ramah staf: Relawan/Officer (PWA/Selfie/GPS) & Admin TU (Monitoring/Rekap) | [`docs/USER_ADMIN_MANUAL.md`](docs/USER_ADMIN_MANUAL.md) |
+| **Laporan QA & Security** | Laporan audit keamanan (RBAC/IDOR/Headers), benchmark query DB nyata, & regresi | [`docs/PHASE6_QA_REPORT.md`](docs/PHASE6_QA_REPORT.md) |
+| **Arsitektur Sistem v2** | Dokumen arsitektur awal, perancangan 4 tabel baru, dan komparasi v1 vs v2 | [`docs/PHASE1_ARCHITECTURE_PLAN.md`](docs/PHASE1_ARCHITECTURE_PLAN.md) |
+| **Template Produksi** | Konfigurasi server Nginx, Environment Produksi, dan Skrip Backup Otomatis | [`.env.production.example`](.env.production.example) & [`deploy/`](deploy/) |
+
+---
+
 ## 🛠️ Stack Teknologi
 
 - **Backend Framework:** Laravel 13.43.0
@@ -52,7 +64,7 @@ npm run build
 
 ## 🧪 Pengujian Otomatis (Automated Testing)
 
-Pengujian unit dan fitur berjalan otomatis pada database SQLite in-memory (`:memory:`) tanpa menyentuh database operasional MySQL (101 tests, 454 assertions, 100% lulus):
+Pengujian unit dan fitur berjalan otomatis pada database SQLite in-memory (`:memory:`) tanpa menyentuh database operasional MySQL (119 tests, 560 assertions, 100% lulus):
 
 ```powershell
 & "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan test

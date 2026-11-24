@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production when configured
+        if (config('app.force_https', false)) {
+            URL::forceScheme('https');
+        }
         // RBAC Gates compatible with legacy and v2 requirements
         Gate::define('ultraman', function (User $user) {
             return $user->hasAnyRoles(['Ultraman', 'ultraman']);
