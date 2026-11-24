@@ -2,7 +2,7 @@
     <thead>
         <tr>
             <th colspan="14" style="font-size: 14pt; font-weight: bold; text-align: center;">
-                SENTRA PELAYANAN PERTANIAN TERPADU (SPPG) KALISAPU
+                SATUAN PELAYANAN PEMENUHAN GIZI (SPPG) KALISAPU
             </th>
         </tr>
         <tr>

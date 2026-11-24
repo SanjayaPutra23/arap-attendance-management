@@ -103,7 +103,7 @@
 <body>
     <!-- Kop Resmi SPPG Kalisapu -->
     <div class="header">
-        <h2>Sentra Pelayanan Pertanian Terpadu (SPPG) Kalisapu</h2>
+        <h2>Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu</h2>
         <h3>Laporan Rekapitulasi Presensi & Perolehan Poin Relawan / Officer</h3>
         <p>Jl. Raya Kalisapu, Kec. Slawi, Kab. Tegal &bull; ARAP Attendance Management System v2.0</p>
     </div>
@@ -121,7 +121,7 @@
                 <td><strong>Total Peserta:</strong></td>
                 <td>{{ $recap['summary']['total_peserta'] }} Relawan / Staf Aktif</td>
                 <td><strong>Waktu Cetak:</strong></td>
-                <td>{{ $printedAt ? $printedAt->translatedFormat('d F Y, H:i') : date('d/m/Y H:i') }} WIB</td>
+                <td>{{ (isset($printedAt) && $printedAt) ? $printedAt->translatedFormat('d F Y, H:i') : date('d/m/Y H:i') }} WIB</td>
             </tr>
         </table>
     </div>
@@ -192,10 +192,10 @@
                     <strong>Pengelola / Penanggung Jawab SPPG</strong>
                     <br><br><br><br><br>
                     <strong>( Pak Aslap / Koordinator )</strong><br>
-                    <small>Sentra Pelayanan Pertanian Terpadu</small>
+                    <small>Satuan Pelayanan Pemenuhan Gizi</small>
                 </td>
                 <td>
-                    Slawi, {{ $printedAt ? $printedAt->translatedFormat('d F Y') : date('d F Y') }}<br>
+                    Slawi, {{ (isset($printedAt) && $printedAt) ? $printedAt->translatedFormat('d F Y') : date('d F Y') }}<br>
                     <strong>Petugas Tata Usaha / Rekapitulasi</strong>
                     <br><br><br><br><br>
                     <strong>( Staf Administrasi SPPG )</strong><br>

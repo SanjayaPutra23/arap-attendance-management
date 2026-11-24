@@ -23,7 +23,9 @@ Route::middleware('auth')->group(function () {
 
     // Mobile Attendance (PWA)
     Route::get('/mobile-attendance', [MobileAttendanceController::class, 'index'])->name('mobile-attendance.index');
-    Route::post('/mobile-attendance/submit', [MobileAttendanceController::class, 'store'])->name('mobile-attendance.store');
+    Route::post('/mobile-attendance/submit', [MobileAttendanceController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('mobile-attendance.store');
     Route::get('/mobile-attendance/history', [MobileAttendanceController::class, 'history'])->name('mobile-attendance.history');
 
     // Permohonan Izin & Sakit (Relawan)

@@ -76,7 +76,10 @@ class PermohonanIzinTest extends TestCase
 
     public function test_relawan_can_submit_izin_with_file_attachment(): void
     {
-        $file = UploadedFile::fake()->create('surat_dokter.pdf', 500, 'application/pdf');
+        $file = UploadedFile::fake()->createWithContent(
+            'surat_dokter.pdf',
+            "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
+        );
 
         $payload = [
             'jenis' => 'sakit',

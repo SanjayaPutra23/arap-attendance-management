@@ -193,7 +193,7 @@
                 @if(! $todayAttendance)
                     {{-- Kasus 1: Belum Check-in --}}
                     <h5 class="fw-bold text-dark mb-1">Presensi Masuk (Check-in)</h5>
-                    <p class="text-muted small mb-3">Pastikan Anda berada di area Dapur SPPG Kalisapu dan foto selfie telah diambil.</p>
+                    <p class="text-muted small mb-3">Pastikan Anda berada di area SPPG Kalisapu dan foto selfie telah diambil.</p>
                     <button type="button" id="btnSubmitAttendance" class="btn btn-success btn-lg px-5 fw-bold shadow-sm" onclick="submitAttendance('check_in')">
                         <i class="bi bi-box-arrow-in-right me-2"></i> Kirim Presensi Masuk (Check-in)
                     </button>

@@ -45,7 +45,7 @@
         <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm bg-white h-100 border-start border-success border-4">
                 <div class="card-body p-3">
-                    <span class="text-muted small fw-semibold">Relawan Dapur</span>
+                    <span class="text-muted small fw-semibold">Relawan Operasional</span>
                     <div class="h3 fw-bold text-success my-1">{{ $stats['relawan'] }}</div>
                     <small class="text-success"><i class="bi bi-egg-fried me-1"></i> Operasional</small>
                 </div>

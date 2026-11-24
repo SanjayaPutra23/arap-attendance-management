@@ -1,6 +1,6 @@
 # ARAP v2 — Aplikasi Presensi Relawan & Pegawai SPPG Kalisapu
 
-ARAP (Aplikasi Relawan & Pegawai) versi 2 merupakan modernisasi menyeluruh sistem presensi untuk **Sentra Pelayanan Pertanian Terpadu (SPPG) Kalisapu**, dibangun dengan arsitektur modern berbasis **Laravel 13.x**, **PHP 8.5.12**, **Bootstrap 5.3 + SCSS**, **Vite**, dan arsitektur **Progressive Web App (PWA)** dengan Geofencing & Foto Selfie langsung.
+ARAP (Aplikasi Relawan & Pegawai) versi 2 merupakan modernisasi menyeluruh sistem presensi untuk **Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu**, dibangun dengan arsitektur modern berbasis **Laravel 13.x**, **PHP 8.5.12**, **Bootstrap 5.3 + SCSS**, **Vite**, dan arsitektur **Progressive Web App (PWA)** dengan Geofencing & Foto Selfie langsung.
 
 ---
 

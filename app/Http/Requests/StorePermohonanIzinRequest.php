@@ -53,4 +53,32 @@ class StorePermohonanIzinRequest extends FormRequest
             'surat_dokter.max' => 'Ukuran file bukti maksimal 3 MB.',
         ];
     }
+
+    /**
+     * Validasi mendalam struktur berkas nyata (Magic Bytes) untuk mencegah berkas berbahaya.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->hasFile('surat_dokter')) {
+                $file = $this->file('surat_dokter');
+                $ext = strtolower((string) $file->getClientOriginalExtension());
+                $realPath = $file->getRealPath();
+
+                if ($realPath && file_exists($realPath)) {
+                    $header = (string) file_get_contents($realPath, false, null, 0, 8);
+
+                    if ($ext === 'pdf') {
+                        if (! str_starts_with($header, '%PDF')) {
+                            $validator->errors()->add('surat_dokter', 'Berkas PDF yang diunggah tidak valid atau rusak.');
+                        }
+                    } elseif (in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
+                        if (@getimagesize($realPath) === false) {
+                            $validator->errors()->add('surat_dokter', 'Berkas gambar yang diunggah bukan format gambar valid.');
+                        }
+                    }
+                }
+            }
+        });
+    }
 }

@@ -13,7 +13,7 @@
                     <span class="badge bg-light text-primary mb-2">ARAP Modernization v2.0</span>
                     <h3 class="fw-bold mb-1">Selamat Datang, {{ $user->name ?? 'Pengguna' }}!</h3>
                     <p class="mb-2 text-white-50">
-                        Sistem Presensi Relawan dan Pegawai Sentra Pelayanan Pertanian Terpadu (SPPG) Kalisapu.
+                        Sistem Presensi Relawan dan Pegawai Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu.
                     </p>
                     <div class="d-flex flex-wrap gap-2 align-items-center pt-1">
                         <span class="small text-white-50"><i class="bi bi-shield-lock me-1"></i> Peran Aktif:</span>

@@ -17,6 +17,24 @@ class Setting extends Model
         'grup',
     ];
 
+    /**
+     * Cache in-memory untuk mencegah N+1 query saat evaluasi presensi massal.
+     *
+     * @var array<string, mixed>|null
+     */
+    protected static ?array $runtimeCache = null;
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            static::clearRuntimeCache();
+        });
+
+        static::deleted(function () {
+            static::clearRuntimeCache();
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -25,12 +43,22 @@ class Setting extends Model
     }
 
     /**
-     * Membaca nilai setting berdasarkan nama secara aman.
+     * Membaca nilai setting berdasarkan nama secara aman dengan runtime memory cache.
      */
     public static function getValue(string $name, mixed $default = null): mixed
     {
-        $setting = static::where('name', $name)->first();
+        if (static::$runtimeCache === null) {
+            static::$runtimeCache = static::pluck('value', 'name')->toArray();
+        }
 
-        return $setting !== null ? $setting->value : $default;
+        return static::$runtimeCache[$name] ?? $default;
+    }
+
+    /**
+     * Bersihkan cache in-memory.
+     */
+    public static function clearRuntimeCache(): void
+    {
+        static::$runtimeCache = null;
     }
 }
