@@ -288,9 +288,9 @@
                     </div>
                     <h5 class="fw-bold mb-1">Izin & Sakit</h5>
                     <p class="text-muted small mb-3">Ajukan surat izin atau sakit dengan upload dokumen bukti / surat dokter.</p>
-                    <button class="btn btn-sm btn-outline-warning w-100 fw-semibold" onclick="alert('Pengajuan izin/sakit sedang disiapkan pada Phase 5B.')">
+                    <a href="{{ route('izin.index') }}" class="btn btn-sm btn-outline-warning w-100 fw-semibold">
                         <i class="bi bi-plus-circle me-1"></i> Ajukan Izin / Sakit
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -306,9 +306,15 @@
                     </div>
                     <h5 class="fw-bold mb-1">Periode 20 - 19</h5>
                     <p class="text-muted small mb-3">Perhitungan poin kehadiran (1.0 Tepat Waktu, 0.8 Terlambat/Pulang Cepat, 0 Alpha).</p>
-                    <button class="btn btn-sm btn-outline-info w-100 fw-semibold" onclick="alert('Rekapitulasi laporan periode 20-19 aktif di Phase 5B.')">
+                    @can('staff-access')
+                    <a href="{{ route('admin.rekap.index') }}" class="btn btn-sm btn-outline-info w-100 fw-semibold">
                         <i class="bi bi-file-earmark-bar-graph me-1"></i> Rekap Bulanan
-                    </button>
+                    </a>
+                    @else
+                    <a href="{{ route('mobile-attendance.history') }}" class="btn btn-sm btn-outline-info w-100 fw-semibold">
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i> Riwayat Kehadiran
+                    </a>
+                    @endcan
                 </div>
             </div>
         </div>

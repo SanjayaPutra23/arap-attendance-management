@@ -12,7 +12,7 @@ ARAP (Aplikasi Relawan & Pegawai) versi 2 merupakan modernisasi menyeluruh siste
 - **Autentikasi & RBAC:** Laravel Fortify v1.43 (Mendukung login via Email / NIK & Role Gates: `ultraman`, `umum`, `staff-access`, `user`)
 - **Frontend & PWA:** Bootstrap 5.3, Bootstrap Icons, Leaflet.js, Vite 8, Web App Manifest & Service Worker
 - **Export & Reporting:** `barryvdh/laravel-dompdf:^3.0`, `maatwebsite/excel:^3.1`
-- **Penyimpanan Foto Presensi:** Private disk `attendance_photos` (`storage/app/private/attendance_photos`)
+- **Penyimpanan Berkas Privat:** Private disk `attendance_photos` (`storage/app/private/attendance_photos`) & `izin_attachments` (`storage/app/private/izin_attachments`)
 
 ---
 
@@ -52,10 +52,10 @@ npm run build
 
 ## 🧪 Pengujian Otomatis (Automated Testing)
 
-Pengujian unit dan fitur berjalan otomatis pada database SQLite in-memory (`:memory:`) tanpa menyentuh database operasional MySQL:
+Pengujian unit dan fitur berjalan otomatis pada database SQLite in-memory (`:memory:`) tanpa menyentuh database operasional MySQL (101 tests, 454 assertions, 100% lulus):
 
 ```powershell
-& "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan test --testsuite=Feature
+& "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan test
 ```
 
 Cakupan pengujian meliputi:
@@ -69,6 +69,43 @@ Cakupan pengujian meliputi:
 - Aturan perhitungan jam kerja per divisi/jabatan dan sistem poin (1.00 / 0.80 / 0.00)
 - Alur lengkap Check-in, Check-out, Anti-duplikasi, dan Audit Log
 - Proteksi otorisasi foto privat (Anti-IDOR)
+- Monitoring kehadiran admin harian, peta sebaran Leaflet, modal selfie, dan review audit log
+- Pengaturan master lokasi geofence SPPG dan pengaturan jam kerja divisi/Officer
+- CRUD Master Pegawai / Relawan & Officer (`pesertas` + sinkronisasi akun `users` & role) serta proteksi non-destruktif
+- Modul Permohonan Izin/Sakit mandiri relawan, upload berkas privat, pembatalan izin, serta review/approval Tata Usaha
+- Penelusuran arsip log fingerprint historis mesin `FPDAPUR1` (9.838 baris data)
+- Engine Rekapitulasi Kehadiran Gabungan periode 20 s.d. 19 (Mobile Attendance + Fingerprint + Izin Disetujui + Libur Nasional vs Alpha)
+- Ekspor laporan bulanan ke format Microsoft Excel (.xlsx) dan Dokumen PDF (Landscape A4)
+
+---
+
+## 🖥️ Fitur Operasional & Modul Sistem
+
+1. **Presensi Mobile PWA:**
+   - Geofencing cerdas dengan validasi GPS & akurasi radius dinamis.
+   - Kamera selfie langsung (WebRTC `getUserMedia`) anti-manipulasi galeri.
+   - Perhitungan otomatis status datang tepat waktu, terlambat, dan pulang awal.
+2. **Dashboard & Monitoring Admin:**
+   - Ringkasan KPI kehadiran harian dan breakdown divisi (termasuk filter khusus **Officer**).
+   - Peta sebaran kehadiran real-time berbasis Leaflet OpenStreetMap.
+   - Modal preview foto selfie privat dan log percobaan presensi ditolak.
+3. **Master Pegawai & Akun (`/admin/pegawai`):**
+   - Pengelolaan data relawan & Officer SPPG dengan filter divisi lengkap.
+   - Pembuatan dan sinkronisasi akun login (`users` & `role_user`) langsung dari form pegawai.
+   - Proteksi anti-hapus (non-destructive) bagi pegawai yang memiliki riwayat log absensi.
+4. **Permohonan Izin & Sakit (`/izin` & `/admin/izin`):**
+   - Pengajuan mandiri oleh relawan dengan unggah surat keterangan dokter/bukti (disk privat).
+   - Verifikasi dan persetujuan bertingkat oleh staf Tata Usaha.
+   - Proteksi Anti-IDOR pada endpoint unduh berkas lampiran.
+5. **Arsip Log Fingerprint (`/admin/arsip-fingerprint`):**
+   - Penelusuran arsip read-only untuk 9.838 baris log mesin fingerprint lama (`FPDAPUR1`).
+6. **Rekapitulasi Bulanan Gabungan 20–19 (`/admin/rekap`):**
+   - Engine kalkulasi gabungan: Presensi Mobile (Prioritas 1) + Fingerprint Mesin (Prioritas 2) + Izin Disetujui (Prioritas 3) + Libur Nasional (Prioritas 4).
+   - Perhitungan poin kehadiran akurat (1.00 tepat waktu, 0.80 terlambat/pulang cepat, 0.00 izin/sakit/alpha).
+   - Ekspor satu-klik ke format Excel (.xlsx via `maatwebsite/excel`) dan PDF Landscape resmi (`barryvdh/laravel-dompdf`).
+7. **Pengaturan Lokasi & Jam Kerja (`/admin/settings`):**
+   - Visual map picker koordinat latitude/longitude dan radius geofence.
+   - Konfigurasi batas jam datang dan pulang per divisi & Officer.
 
 ---
 

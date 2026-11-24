@@ -22,8 +22,8 @@
     </li>
 
     <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Modul Permohonan Izin / Sakit sedang disiapkan'); return false;">
-            <i class="bi bi-file-earmark-medical"></i>
+        <a href="{{ route('izin.index') }}" class="nav-link {{ request()->routeIs('izin.*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-medical text-warning"></i>
             <span>Izin & Sakit</span>
         </a>
     </li>
@@ -42,16 +42,37 @@
     </li>
 
     <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Modul Rekapitulasi Periode 20-19 akan aktif di Phase 5B'); return false;">
+        <a href="{{ route('admin.izin.index') }}" class="nav-link {{ request()->routeIs('admin.izin.*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-check text-info"></i>
+            <span>Verifikasi Izin</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{{ route('admin.rekap.index') }}" class="nav-link {{ request()->routeIs('admin.rekap.*') ? 'active' : '' }}">
             <i class="bi bi-file-earmark-spreadsheet text-success"></i>
             <span>Rekapitulasi (20-19)</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{{ route('admin.arsip-fingerprint.index') }}" class="nav-link {{ request()->routeIs('admin.arsip-fingerprint.*') ? 'active' : '' }}">
+            <i class="bi bi-hdd-network text-secondary"></i>
+            <span>Arsip Fingerprint</span>
         </a>
     </li>
     @endcan
 
     @can('umum')
     <li class="nav-header px-3 pt-3 pb-1 text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-        Pengaturan SPPG
+        Pengaturan & Master
+    </li>
+
+    <li class="nav-item">
+        <a href="{{ route('admin.pegawai.index') }}" class="nav-link {{ request()->routeIs('admin.pegawai.*') ? 'active' : '' }}">
+            <i class="bi bi-people text-primary"></i>
+            <span>Master Pegawai / Officer</span>
+        </a>
     </li>
 
     <li class="nav-item">
@@ -65,26 +86,6 @@
         <a href="{{ route('admin.settings.working-hours.index') }}" class="nav-link {{ request()->routeIs('admin.settings.working-hours.*') ? 'active' : '' }}">
             <i class="bi bi-clock-history text-warning"></i>
             <span>Jam Kerja Divisi</span>
-        </a>
-    </li>
-    @endcan
-
-    @can('ultraman')
-    <li class="nav-header px-3 pt-3 pb-1 text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-        Super Admin
-    </li>
-
-    <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Manajemen Master Relawan & Mesin FPDAPUR1 sedang disiapkan'); return false;">
-            <i class="bi bi-people"></i>
-            <span>Master Relawan</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a href="#" class="nav-link text-secondary" onclick="alert('Status Sinkronisasi Mesin FPDAPUR1'); return false;">
-            <i class="bi bi-hdd-network text-info"></i>
-            <span>Mesin FPDAPUR1</span>
         </a>
     </li>
     @endcan

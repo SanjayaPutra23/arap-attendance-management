@@ -61,7 +61,13 @@ class MonitoringController extends Controller
 
         // Filter status kehadiran
         if ($status && $status !== 'all') {
-            $query->where('status', $status);
+            if ($status === 'tepat_waktu' || $status === 'hadir') {
+                $query->whereIn('status', MobileAttendance::onTimeStatuses());
+            } elseif ($status === 'terlambat_early') {
+                $query->whereIn('status', MobileAttendance::lateOrEarlyStatuses());
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         // Pencarian Nama atau NIK
@@ -77,8 +83,8 @@ class MonitoringController extends Controller
         // Ringkasan metrik kehadiran pada tanggal terpilih
         $metrics = [
             'total_hadir' => (clone $query)->count(),
-            'tepat_waktu' => (clone $query)->where('status', 'tepat_waktu')->count(),
-            'terlambat_early' => (clone $query)->whereIn('status', ['terlambat', 'pulang_awal', 'terlambat_pulang_awal'])->count(),
+            'tepat_waktu' => (clone $query)->whereIn('status', MobileAttendance::onTimeStatuses())->count(),
+            'terlambat_early' => (clone $query)->whereIn('status', MobileAttendance::lateOrEarlyStatuses())->count(),
         ];
 
         // Data titik koordinat untuk Leaflet Map (semua record yang punya koordinat pada filter saat ini)

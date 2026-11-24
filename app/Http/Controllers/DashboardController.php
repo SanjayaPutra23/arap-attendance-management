@@ -58,12 +58,12 @@ class DashboardController extends Controller
                 ->whereDate('attendance_date', $today)
                 ->get();
 
-            $hadirTepatWaktu = $todayAttendances->where('status', 'tepat_waktu')->count();
-            $terlambatEarly = $todayAttendances->whereIn('status', ['terlambat', 'pulang_awal', 'terlambat_pulang_awal'])->count();
+            $hadirTepatWaktu = $todayAttendances->filter(fn (MobileAttendance $a) => $a->isOnTime())->count();
+            $terlambatEarly = $todayAttendances->filter(fn (MobileAttendance $a) => $a->isLateOrEarly())->count();
             $totalHadir = $todayAttendances->count();
 
             // Izin / sakit disetujui hari ini
-            $izinSakitHariIni = PermohonanIzin::where('status', 'disetujui')
+            $izinSakitHariIni = PermohonanIzin::where('status', PermohonanIzin::STATUS_DISETUJUI)
                 ->where('tgl_mulai', '<=', $today)
                 ->where('tgl_selesai', '>=', $today)
                 ->count();
@@ -104,8 +104,8 @@ class DashboardController extends Controller
                 $divTotal = $pesertaIds->count();
                 $divAtts = $todayAttendances->whereIn('peserta_id', $pesertaIds);
                 $divHadir = $divAtts->count();
-                $divOnTime = $divAtts->where('status', 'tepat_waktu')->count();
-                $divLateEarly = $divAtts->whereIn('status', ['terlambat', 'pulang_awal', 'terlambat_pulang_awal'])->count();
+                $divOnTime = $divAtts->filter(fn (MobileAttendance $a) => $a->isOnTime())->count();
+                $divLateEarly = $divAtts->filter(fn (MobileAttendance $a) => $a->isLateOrEarly())->count();
 
                 $divisionSummary[] = [
                     'name' => $divisi,

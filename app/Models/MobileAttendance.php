@@ -12,6 +12,58 @@ class MobileAttendance extends Model
 {
     use HasFactory;
 
+    public const STATUS_HADIR = 'hadir';
+
+    public const STATUS_TEPAT_WAKTU = 'tepat_waktu';
+
+    public const STATUS_TERLAMBAT = 'terlambat';
+
+    public const STATUS_PULANG_AWAL = 'pulang_awal';
+
+    public const STATUS_TERLAMBAT_PULANG_AWAL = 'terlambat_pulang_awal';
+
+    public const STATUS_IZIN = 'izin';
+
+    public const STATUS_SAKIT = 'sakit';
+
+    public const STATUS_ALPHA = 'alpha';
+
+    /**
+     * Seluruh status yang dianggap tepat waktu / hadir skor 1.00.
+     *
+     * @return list<string>
+     */
+    public static function onTimeStatuses(): array
+    {
+        return [self::STATUS_HADIR, self::STATUS_TEPAT_WAKTU];
+    }
+
+    /**
+     * Seluruh status yang dianggap terlambat / pulang awal skor 0.80.
+     *
+     * @return list<string>
+     */
+    public static function lateOrEarlyStatuses(): array
+    {
+        return [self::STATUS_TERLAMBAT, self::STATUS_PULANG_AWAL, self::STATUS_TERLAMBAT_PULANG_AWAL];
+    }
+
+    /**
+     * Cek apakah rekaman presensi ini tepat waktu.
+     */
+    public function isOnTime(): bool
+    {
+        return in_array($this->status, self::onTimeStatuses(), true);
+    }
+
+    /**
+     * Cek apakah rekaman presensi ini terlambat atau pulang awal.
+     */
+    public function isLateOrEarly(): bool
+    {
+        return in_array($this->status, self::lateOrEarlyStatuses(), true);
+    }
+
     protected $table = 'mobile_attendances';
 
     protected $fillable = [

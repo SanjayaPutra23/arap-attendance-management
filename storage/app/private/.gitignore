@@ -2,3 +2,5 @@
 !.gitignore
 !attendance_photos/
 !attendance_photos/.gitkeep
+!izin_attachments/
+!izin_attachments/.gitkeep

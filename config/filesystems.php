@@ -46,6 +46,14 @@ return [
             'report' => false,
         ],
 
+        'izin_attachments' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/izin_attachments'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

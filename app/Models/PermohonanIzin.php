@@ -10,6 +10,46 @@ class PermohonanIzin extends Model
 {
     use HasFactory;
 
+    public const STATUS_MENUNGGU = 'menunggu';
+
+    public const STATUS_PENDING = 'menunggu';
+
+    public const STATUS_DISETUJUI = 'disetujui';
+
+    public const STATUS_APPROVED = 'disetujui';
+
+    public const STATUS_DITOLAK = 'ditolak';
+
+    public const STATUS_REJECTED = 'ditolak';
+
+    public const JENIS_IZIN = 'izin';
+
+    public const JENIS_SAKIT = 'sakit';
+
+    /**
+     * Cek apakah permohonan disetujui.
+     */
+    public function isApproved(): bool
+    {
+        return in_array($this->status, [self::STATUS_DISETUJUI, self::STATUS_APPROVED], true);
+    }
+
+    /**
+     * Cek apakah permohonan masih menunggu verifikasi.
+     */
+    public function isPending(): bool
+    {
+        return in_array($this->status, [self::STATUS_MENUNGGU, self::STATUS_PENDING], true);
+    }
+
+    /**
+     * Cek apakah permohonan ditolak.
+     */
+    public function isRejected(): bool
+    {
+        return in_array($this->status, [self::STATUS_DITOLAK, self::STATUS_REJECTED], true);
+    }
+
     protected $table = 'permohonan_izins';
 
     protected $fillable = [
