@@ -18,14 +18,16 @@ class AttendanceRecapService
     ) {}
 
     /**
-     * Menghasilkan rekapitulasi kehadiran gabungan periode bulanan (tgl 20 s.d. 19).
+     * Menghasilkan rekapitulasi kehadiran gabungan periode bulanan (tgl 20 s.d. 19) atau mingguan (Senin s.d. Minggu).
      *
      * @param  int  $year  Tahun periode berjalan
      * @param  int  $month  Bulan periode berjalan (1 - 12)
      * @param  string|null  $divisi  Filter divisi/jabatan (opsional)
      * @param  string|null  $search  Filter nama/NIK peserta (opsional)
+     * @param  string  $mode  Mode rekapitulasi ('bulanan' atau 'mingguan')
+     * @param  string|null  $referenceDate  Tanggal acuan untuk mode mingguan (Y-m-d)
      * @return array{
-     *     period: array{start: Carbon, end: Carbon, label: string},
+     *     period: array{mode: string, year: int, month: int, start: Carbon, end: Carbon, label: string, reference_date: string},
      *     summary: array{
      *         total_peserta: int,
      *         total_hadir_tepat_waktu: int,
@@ -45,17 +47,28 @@ class AttendanceRecapService
         int $year,
         int $month,
         ?string $divisi = null,
-        ?string $search = null
+        ?string $search = null,
+        string $mode = 'bulanan',
+        ?string $referenceDate = null
     ): array {
-        // 1. Tentukan rentang periode: tgl 20 bulan M-1 s.d. tgl 19 bulan M
-        $periodRange = $this->calculationService->getMonthlyPeriodRange($year, $month);
-        $startDate = $periodRange['start']->copy()->startOfDay();
-        $endDate = $periodRange['end']->copy()->endOfDay();
+        // 1. Tentukan rentang periode berdasarkan mode
+        if ($mode === 'mingguan') {
+            $periodRange = $this->calculationService->getWeeklyPeriodRange(
+                $referenceDate ?? sprintf('%04d-%02d-01', $year, $month)
+            );
+            $startDate = $periodRange['start']->copy()->startOfDay();
+            $endDate = $periodRange['end']->copy()->endOfDay();
+            $periodLabel = $periodRange['label'];
+        } else {
+            $mode = 'bulanan';
+            $periodRange = $this->calculationService->getMonthlyPeriodRange($year, $month);
+            $startDate = $periodRange['start']->copy()->startOfDay();
+            $endDate = $periodRange['end']->copy()->endOfDay();
+            $periodLabel = $startDate->translatedFormat('d M Y').' - '.$endDate->translatedFormat('d M Y');
+        }
 
         $startStr = $startDate->toDateString();
         $endStr = $endDate->toDateString();
-
-        $periodLabel = $startDate->translatedFormat('d M Y').' - '.$endDate->translatedFormat('d M Y');
 
         // 2. Susun daftar seluruh tanggal dalam periode
         $carbonPeriod = CarbonPeriod::create($startDate, $endDate);
@@ -335,11 +348,13 @@ class AttendanceRecapService
 
         return [
             'period' => [
+                'mode' => $mode,
                 'year' => $year,
                 'month' => $month,
                 'start' => $startDate,
                 'end' => $endDate,
                 'label' => $periodLabel,
+                'reference_date' => $referenceDate ?? $startDate->toDateString(),
             ],
             'summary' => $summary,
             'records' => $records,

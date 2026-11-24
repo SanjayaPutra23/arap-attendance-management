@@ -172,4 +172,28 @@ class AttendanceCalculationService
             'end' => $end,
         ];
     }
+
+    /**
+     * Mengambil rentang tanggal periode mingguan operasional SPPG:
+     * Hari Senin s.d. hari Minggu (WIB).
+     *
+     * @param  string|null  $referenceDate  Tanggal acuan (Y-m-d), default hari ini
+     * @return array{start: Carbon, end: Carbon, label: string}
+     */
+    public function getWeeklyPeriodRange(?string $referenceDate = null): array
+    {
+        $date = $referenceDate
+            ? Carbon::parse($referenceDate, 'Asia/Jakarta')
+            : Carbon::now('Asia/Jakarta');
+
+        $start = $date->copy()->startOfWeek(CarbonInterface::MONDAY)->startOfDay();
+        $end = $date->copy()->endOfWeek(CarbonInterface::SUNDAY)->endOfDay();
+        $label = $start->translatedFormat('d M Y').' - '.$end->translatedFormat('d M Y');
+
+        return [
+            'start' => $start,
+            'end' => $end,
+            'label' => $label,
+        ];
+    }
 }

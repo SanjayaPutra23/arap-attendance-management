@@ -27,7 +27,7 @@ class PerformanceQueryCountTest extends TestCase
     {
         parent::setUp();
 
-        $roleUmum = Role::create(['name' => 'Umum']);
+        $roleUltraman = Role::create(['name' => 'Ultraman']);
         $roleOfficer = Role::create(['name' => 'Officer']);
         $roleUser = Role::create(['name' => 'User']);
 
@@ -122,7 +122,7 @@ class PerformanceQueryCountTest extends TestCase
         ]);
 
         $this->adminUser = User::factory()->create(['email' => 'admin@arap.local']);
-        $this->adminUser->roles()->attach($roleUmum);
+        $this->adminUser->roles()->attach($roleUltraman);
     }
 
     /**

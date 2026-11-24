@@ -46,7 +46,7 @@ class AdminMonitoringTest extends TestCase
 
         $roleUser = Role::create(['name' => 'User']);
         $roleOfficer = Role::create(['name' => 'Officer']);
-        $roleUmum = Role::create(['name' => 'Umum']);
+        $roleUltraman = Role::create(['name' => 'Ultraman']);
 
         // Relawan biasa
         $this->pesertaDapur = Peserta::create([
@@ -76,12 +76,12 @@ class AdminMonitoringTest extends TestCase
         ]);
         $this->officerUser->roles()->attach($roleOfficer);
 
-        // Admin Umum
+        // Admin Utama (Ultraman)
         $this->umumUser = User::factory()->create([
-            'name' => 'Admin Umum SPPG',
-            'email' => 'umum@arap.local',
+            'name' => 'Admin Utama SPPG',
+            'email' => 'admin@arap.local',
         ]);
-        $this->umumUser->roles()->attach($roleUmum);
+        $this->umumUser->roles()->attach($roleUltraman);
     }
 
     public function test_unauthenticated_user_cannot_access_monitoring(): void

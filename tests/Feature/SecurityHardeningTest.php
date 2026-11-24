@@ -29,7 +29,7 @@ class SecurityHardeningTest extends TestCase
 
         $roleUser = Role::create(['name' => 'User']);
         $roleOfficer = Role::create(['name' => 'Officer']);
-        $roleUmum = Role::create(['name' => 'Umum']);
+        $roleUltraman = Role::create(['name' => 'Ultraman']);
 
         $this->peserta = Peserta::create([
             'name' => 'Budi Santoso',
@@ -53,7 +53,7 @@ class SecurityHardeningTest extends TestCase
         $this->umumUser = User::factory()->create([
             'email' => 'umum@arap.local',
         ]);
-        $this->umumUser->roles()->attach($roleUmum);
+        $this->umumUser->roles()->attach($roleUltraman);
 
         AttendanceLocation::create([
             'name' => 'SPPG Kalisapu',

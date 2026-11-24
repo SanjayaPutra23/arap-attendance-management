@@ -7,7 +7,7 @@
         </tr>
         <tr>
             <th colspan="14" style="font-size: 12pt; font-weight: bold; text-align: center;">
-                LAPORAN REKAPITULASI PRESENSI &amp; POIN KEHADIRAN (PERIODE 20 - 19)
+                LAPORAN REKAPITULASI PRESENSI &amp; POIN KEHADIRAN ({{ strtoupper(($recap['period']['mode'] ?? 'bulanan') === 'mingguan' ? 'PERIODE MINGGUAN' : 'PERIODE 20 - 19') }})
             </th>
         </tr>
         <tr>

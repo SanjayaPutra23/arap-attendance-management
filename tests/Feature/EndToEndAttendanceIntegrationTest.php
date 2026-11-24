@@ -44,8 +44,7 @@ class EndToEndAttendanceIntegrationTest extends TestCase
         // 1. Roles
         $roleUser = Role::create(['name' => 'User']);
         $roleOfficer = Role::create(['name' => 'Officer']);
-        $roleUmum = Role::create(['name' => 'Umum']);
-        $roleTU = Role::create(['name' => 'Tata Usaha']);
+        $roleUltraman = Role::create(['name' => 'Ultraman']);
 
         // 2. Settings Jam Kerja
         Setting::create(['name' => 'jam_datang_persiapan', 'value' => '08:00:00']);
@@ -113,7 +112,7 @@ class EndToEndAttendanceIntegrationTest extends TestCase
             'email' => 'tu@arap.local',
             'password' => Hash::make('password123'),
         ]);
-        $this->adminTU->roles()->attach([$roleTU->id, $roleUmum->id]);
+        $this->adminTU->roles()->attach([$roleUltraman->id]);
     }
 
     /**

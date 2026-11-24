@@ -15,51 +15,83 @@
 </head>
 <body class="bg-light">
     <!-- Mobile Offcanvas Sidebar Drawer -->
-    <div class="offcanvas offcanvas-start bg-white" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="offcanvas-title fw-bold text-primary-arap" id="mobileSidebarLabel">
-                <i class="bi bi-fingerprint me-2"></i>ARAP v2
+    <div class="offcanvas offcanvas-start bg-sidebar-dark text-white" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header border-bottom border-sidebar-divider">
+            <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2" id="mobileSidebarLabel">
+                <div class="bg-primary text-white rounded p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-fingerprint fs-5"></i>
+                </div>
+                <span>ARAP SPPG</span>
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body p-0">
+        <div class="offcanvas-body p-0 custom-scrollbar">
             @include('layouts.partials.sidebar-menu')
+        </div>
+        <div class="p-3 border-top border-sidebar-divider bg-sidebar-darker">
+            <small class="text-slate-300 d-block text-truncate">
+                <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->name ?? 'Pengguna' }}
+            </small>
+            <span class="badge bg-primary text-uppercase" style="font-size: 0.65rem;">
+                {{ Auth::user()->roles->pluck('name')->first() ?? 'Relawan' }}
+            </span>
         </div>
     </div>
 
-    <!-- Main App Container -->
-    <div class="d-flex min-vh-100">
-        <!-- Desktop Sidebar -->
-        <aside class="sidebar d-none d-lg-flex flex-column flex-shrink-0">
-            <div class="p-3 border-bottom d-flex align-items-center gap-2">
-                <div class="bg-primary-arap text-white rounded p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+    <!-- Main App Container: 100vh height locked for independent scrolling on desktop -->
+    <div class="app-layout-container">
+        <!-- Desktop Sidebar: Fixed width 260px, 100vh height, own scrollbar -->
+        <aside id="desktopSidebar" class="sidebar-desktop d-none d-lg-flex flex-column flex-shrink-0 bg-sidebar-dark text-white">
+            <div class="p-3 border-bottom border-sidebar-divider d-flex align-items-center gap-2 flex-shrink-0">
+                <div class="bg-primary text-white rounded p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                     <i class="bi bi-fingerprint fs-5"></i>
                 </div>
-                <div>
-                    <h6 class="fw-bold mb-0 text-primary-arap">ARAP SPPG</h6>
-                    <small class="text-muted" style="font-size: 0.75rem;">Sistem Presensi Kalisapu</small>
+                <div class="lh-sm">
+                    <h6 class="fw-bold mb-0 text-white">ARAP SPPG</h6>
+                    <small class="text-slate-400" style="font-size: 0.72rem;">Sistem Presensi Kalisapu</small>
                 </div>
             </div>
 
-            <div class="py-2 flex-grow-1 overflow-auto">
+            <!-- Scrollable menu container with anti-jump ID -->
+            <div class="sidebar-scrollable flex-grow-1 custom-scrollbar py-2" id="sidebarMenuScrollable">
                 @include('layouts.partials.sidebar-menu')
             </div>
 
-            <div class="p-3 border-top bg-light">
-                <small class="text-muted d-block text-truncate">
-                    <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->name ?? 'Pengguna' }}
-                </small>
-                <span class="badge bg-primary text-uppercase" style="font-size: 0.65rem;">
-                    {{ Auth::user()->roles->pluck('name')->first() ?? 'Relawan' }}
-                </span>
+            <script>
+                // Anti-jump: Instant scroll restoration before paint
+                (function() {
+                    try {
+                        var el = document.getElementById('sidebarMenuScrollable');
+                        var pos = sessionStorage.getItem('arap_sidebar_scroll');
+                        if (el && pos !== null) {
+                            el.scrollTop = parseInt(pos, 10);
+                        }
+                    } catch (e) {}
+                })();
+            </script>
+
+            <div class="p-3 border-top border-sidebar-divider bg-sidebar-darker flex-shrink-0">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="overflow-hidden me-2">
+                        <small class="text-slate-300 d-block text-truncate fw-medium" style="font-size: 0.8rem;">
+                            <i class="bi bi-person-circle me-1 text-slate-400"></i> {{ Auth::user()->name ?? 'Pengguna' }}
+                        </small>
+                        <small class="text-slate-400 d-block text-truncate" style="font-size: 0.7rem;">
+                            {{ Auth::user()->peserta?->jabatan ?? (Auth::user()->roles->pluck('name')->first() ?? 'Relawan') }}
+                        </small>
+                    </div>
+                    <span class="badge bg-primary text-uppercase flex-shrink-0" style="font-size: 0.65rem;">
+                        {{ Auth::user()->roles->pluck('name')->first() ?? 'User' }}
+                    </span>
+                </div>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Main Content Area: Flex 1, 100vh, topbar pinned, main body scrollable -->
         <div class="content-wrapper d-flex flex-column flex-grow-1">
             <!-- Topbar Navigation -->
-            <nav class="navbar navbar-expand bg-white topbar sticky-top shadow-sm">
-                <div class="container-fluid px-2 px-md-3">
+            <nav class="navbar navbar-expand bg-white topbar border-bottom flex-shrink-0 shadow-sm">
+                <div class="container-fluid px-3 px-md-4">
                     <!-- Hamburger button for mobile -->
                     <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                         <i class="bi bi-list fs-5"></i>
@@ -73,7 +105,7 @@
                         <!-- User Dropdown & Info -->
                         <div class="dropdown">
                             <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2 py-1 px-2 border" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person-fill-gear text-primary-arap fs-6"></i>
+                                <i class="bi bi-person-fill-gear text-primary fs-6"></i>
                                 <span class="d-none d-md-inline fw-semibold small">{{ Auth::user()->name ?? 'Akun' }}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userMenuButton">
@@ -98,30 +130,30 @@
                 </div>
             </nav>
 
-            <!-- Page Content Body -->
-            <main class="p-3 p-md-4 flex-grow-1">
+            <!-- Page Content Body: Independently Scrollable Container -->
+            <main class="main-content-scrollable flex-grow-1 p-3 p-md-4">
                 <!-- Flash Notification Banner -->
                 @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                         <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
                 @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
                 @yield('content')
-            </main>
 
-            <!-- Footer -->
-            <footer class="bg-white border-top py-2 px-3 text-center text-muted small mt-auto">
-                ARAP v2 &copy; {{ date('Y') }} SPPG Kalisapu &middot; Modernisasi Laravel 13 & PHP 8.5
-            </footer>
+                <!-- Footer inside scrollable -->
+                <footer class="bg-white border-top py-3 px-3 text-center text-muted small mt-4 rounded-3 shadow-sm">
+                    ARAP v2 &copy; {{ date('Y') }} SPPG Kalisapu &middot; Modernisasi Laravel 13 & PHP 8.5
+                </footer>
+            </main>
         </div>
     </div>
 

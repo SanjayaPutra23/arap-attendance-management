@@ -34,7 +34,7 @@ class PermohonanIzinTest extends TestCase
 
         $roleUser = Role::create(['name' => 'User']);
         $roleOfficer = Role::create(['name' => 'Officer']);
-        $roleUmum = Role::create(['name' => 'Umum']);
+        $roleUltraman = Role::create(['name' => 'Ultraman']);
 
         $this->peserta1 = Peserta::create([
             'name' => 'Relawan Pertama',
@@ -55,8 +55,8 @@ class PermohonanIzinTest extends TestCase
         $this->staffUser = User::factory()->create(['name' => 'Staf Officer']);
         $this->staffUser->roles()->attach($roleOfficer);
 
-        $this->umumAdmin = User::factory()->create(['name' => 'Admin Umum TU']);
-        $this->umumAdmin->roles()->attach($roleUmum);
+        $this->umumAdmin = User::factory()->create(['name' => 'Admin Utama TU']);
+        $this->umumAdmin->roles()->attach($roleUltraman);
     }
 
     public function test_unauthenticated_user_cannot_access_izin(): void

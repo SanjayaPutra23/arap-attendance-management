@@ -104,7 +104,7 @@
     <!-- Kop Resmi SPPG Kalisapu -->
     <div class="header">
         <h2>Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu</h2>
-        <h3>Laporan Rekapitulasi Presensi & Perolehan Poin Relawan / Officer</h3>
+        <h3>Laporan Rekapitulasi Presensi {{ ($recap['period']['mode'] ?? 'bulanan') === 'mingguan' ? 'Mingguan' : 'Bulanan' }} & Perolehan Poin Relawan / Officer</h3>
         <p>Jl. Raya Kalisapu, Kec. Slawi, Kab. Tegal &bull; ARAP Attendance Management System v2.0</p>
     </div>
 
@@ -113,7 +113,7 @@
         <table class="meta-table">
             <tr>
                 <td style="width: 15%;"><strong>Periode Kerja:</strong></td>
-                <td style="width: 35%;">{{ $recap['period']['label'] }} (Cut-off 20 s.d. 19)</td>
+                <td style="width: 35%;">{{ $recap['period']['label'] }} ({{ ($recap['period']['mode'] ?? 'bulanan') === 'mingguan' ? 'Mingguan' : 'Cut-off 20 s.d. 19' }})</td>
                 <td style="width: 15%;"><strong>Divisi / Filter:</strong></td>
                 <td style="width: 35%;">{{ $divisi ? ucfirst($divisi) : 'Semua Divisi SPPG' }}</td>
             </tr>

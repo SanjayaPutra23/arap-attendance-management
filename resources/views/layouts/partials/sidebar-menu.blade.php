@@ -1,4 +1,4 @@
-<ul class="nav nav-pills flex-column mb-auto">
+<ul class="nav nav-pills flex-column sidebar-nav mb-auto">
     <li class="nav-item">
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
             <i class="bi bi-speedometer2"></i>
@@ -90,7 +90,7 @@
     </li>
     @endcan
 
-    <li class="my-3 border-top"></li>
+    <li class="my-2 border-top border-sidebar-divider"></li>
 
     <li class="nav-item">
         <form method="POST" action="{{ route('logout') }}" class="m-0">

@@ -36,7 +36,7 @@ class AttendanceLocationManagementTest extends TestCase
 
         $roleUser = Role::create(['name' => 'User']);
         $roleOfficer = Role::create(['name' => 'Officer']);
-        $roleUmum = Role::create(['name' => 'Umum']);
+        $roleUltraman = Role::create(['name' => 'Ultraman']);
 
         $this->relawanUser = User::factory()->create(['email' => 'relawan@arap.local']);
         $this->relawanUser->roles()->attach($roleUser);
@@ -44,8 +44,8 @@ class AttendanceLocationManagementTest extends TestCase
         $this->officerUser = User::factory()->create(['email' => 'officer@arap.local']);
         $this->officerUser->roles()->attach($roleOfficer);
 
-        $this->umumUser = User::factory()->create(['email' => 'umum@arap.local']);
-        $this->umumUser->roles()->attach($roleUmum);
+        $this->umumUser = User::factory()->create(['email' => 'admin@arap.local']);
+        $this->umumUser->roles()->attach($roleUltraman);
     }
 
     public function test_unauthenticated_user_cannot_access_locations_setting(): void

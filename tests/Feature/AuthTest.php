@@ -81,16 +81,15 @@ class AuthTest extends TestCase
     }
 
     /**
-     * Test 5: Pengujian otorisasi RBAC Gates (ultraman, umum, staff-access, user).
+     * Test 5: Pengujian otorisasi RBAC Gates pasca-cleanup peran (Ultraman, Officer, User).
      */
     public function test_rbac_gates(): void
     {
         $roleUltraman = Role::create(['name' => 'Ultraman']);
-        $roleUmum = Role::create(['name' => 'Umum']);
         $roleOfficer = Role::create(['name' => 'Officer']);
         $roleRelawan = Role::create(['name' => 'User']);
 
-        // 1. User Ultraman (Super Admin)
+        // 1. User Ultraman (Super Admin / Admin Utama)
         $superAdmin = User::factory()->create();
         $superAdmin->roles()->attach($roleUltraman);
 
@@ -99,16 +98,7 @@ class AuthTest extends TestCase
         $this->assertTrue(Gate::forUser($superAdmin)->allows('staff-access'));
         $this->assertTrue(Gate::forUser($superAdmin)->allows('user'));
 
-        // 2. User Umum (Tata Usaha / HR)
-        $userUmum = User::factory()->create();
-        $userUmum->roles()->attach($roleUmum);
-
-        $this->assertFalse(Gate::forUser($userUmum)->allows('ultraman'));
-        $this->assertTrue(Gate::forUser($userUmum)->allows('umum'));
-        $this->assertTrue(Gate::forUser($userUmum)->allows('staff-access'));
-        $this->assertTrue(Gate::forUser($userUmum)->allows('user'));
-
-        // 3. User Officer
+        // 2. User Officer (Staff Lapangan Terotorisasi)
         $userOfficer = User::factory()->create();
         $userOfficer->roles()->attach($roleOfficer);
 
@@ -117,7 +107,7 @@ class AuthTest extends TestCase
         $this->assertTrue(Gate::forUser($userOfficer)->allows('staff-access'));
         $this->assertTrue(Gate::forUser($userOfficer)->allows('user'));
 
-        // 4. User Relawan Biasa (Role: User)
+        // 3. User Relawan Biasa (Role: User)
         $userRelawan = User::factory()->create();
         $userRelawan->roles()->attach($roleRelawan);
 

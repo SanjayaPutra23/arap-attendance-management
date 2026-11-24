@@ -5,35 +5,77 @@
 
 @section('content')
 <div class="container-fluid p-0">
-    <!-- Filter Periode Bulanan (Aturan 20 - 19) -->
+    <!-- Banner Mode Riwayat Aktif dari Pengaturan Admin -->
+    <div class="alert alert-info border-0 shadow-sm d-flex align-items-center justify-content-between mb-4 py-2 px-3">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+            <div>
+                <span class="small fw-bold">Mode Riwayat Aktif:</span>
+                <span class="badge {{ $mode === 'mingguan' ? 'bg-primary' : 'bg-success' }} ms-1">
+                    {{ $mode === 'mingguan' ? 'Mingguan (Senin - Minggu)' : 'Bulanan (Cut-off 20 - 19)' }}
+                </span>
+                <span class="small text-muted d-none d-md-inline ms-1">&bull; Ditetapkan oleh Admin SPPG</span>
+            </div>
+        </div>
+        <div class="small fw-semibold text-primary">
+            {{ $range['label'] ?? ($range['start']->isoFormat('D MMM Y') . ' s.d. ' . $range['end']->isoFormat('D MMM Y')) }}
+        </div>
+    </div>
+
+    <!-- Filter Periode (Mingguan atau Bulanan) -->
     <div class="card card-dashboard border-0 bg-white shadow-sm mb-4">
         <div class="card-body p-3 p-md-4">
-            <form method="GET" action="{{ route('mobile-attendance.history') }}" class="row g-2 align-items-center">
-                <div class="col-12 col-md-4">
-                    <label class="form-label small fw-bold text-muted mb-1">Pilih Bulan Periode</label>
-                    <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
-                        @foreach(range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
-                                {{ Carbon\Carbon::create(2026, $m, 1)->locale('id')->isoFormat('MMMM') }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label small fw-bold text-muted mb-1">Pilih Tahun</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-                        @foreach(range(now()->year - 2, now()->year + 1) as $y)
-                            <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-12 col-md-5 text-md-end mt-3 mt-md-0">
-                    <span class="badge bg-light text-primary border p-2 w-100 text-start text-md-end">
-                        <i class="bi bi-calendar-range me-1"></i>
-                        Rentang: <strong>{{ $range['start']->isoFormat('D MMM Y') }}</strong> s.d. <strong>{{ $range['end']->isoFormat('D MMM Y') }}</strong>
-                    </span>
-                </div>
-            </form>
+            @if($mode === 'mingguan')
+                <form method="GET" action="{{ route('mobile-attendance.history') }}" class="row g-2 align-items-center">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-muted mb-1">Pilih Tanggal Minggu</label>
+                        <div class="input-group input-group-sm">
+                            <a href="{{ route('mobile-attendance.history', ['date' => $prevDate]) }}" class="btn btn-outline-secondary" title="Minggu Sebelumnya">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                            <input type="date" name="date" class="form-control" value="{{ $date }}" onchange="this.form.submit()">
+                            <a href="{{ route('mobile-attendance.history', ['date' => $nextDate]) }}" class="btn btn-outline-secondary" title="Minggu Berikutnya">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 text-md-end mt-2 mt-md-0">
+                        <span class="badge bg-light text-primary border p-2 w-100 text-start text-md-end">
+                            <i class="bi bi-calendar-week me-1"></i>
+                            Rentang Minggu: <strong>{{ $range['label'] }}</strong>
+                        </span>
+                    </div>
+                </form>
+            @else
+                <form method="GET" action="{{ route('mobile-attendance.history') }}" class="row g-2 align-items-center">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold text-muted mb-1">Pilih Bulan Periode</label>
+                        <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+                            @foreach(range(1, 12) as $m)
+                                <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
+                                    {{ Carbon\Carbon::create(2026, $m, 1)->locale('id')->isoFormat('MMMM') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">Pilih Tahun</label>
+                        <div class="input-group input-group-sm">
+                            <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @foreach(range(now()->year - 2, now()->year + 1) as $y)
+                                    <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-5 text-md-end mt-3 mt-md-0">
+                        <span class="badge bg-light text-primary border p-2 w-100 text-start text-md-end">
+                            <i class="bi bi-calendar-range me-1"></i>
+                            Rentang: <strong>{{ $range['start']->isoFormat('D MMM Y') }}</strong> s.d. <strong>{{ $range['end']->isoFormat('D MMM Y') }}</strong>
+                        </span>
+                    </div>
+                </form>
+            @endif
         </div>
     </div>
 

@@ -9,9 +9,11 @@ use App\Models\AttendancePhoto;
 use App\Models\Libur;
 use App\Models\MobileAttendance;
 use App\Models\PermohonanIzin;
+use App\Models\Setting;
 use App\Services\AttendanceCalculationService;
 use App\Services\GeofencingService;
 use App\Services\SelfieMediaService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -348,16 +350,44 @@ class MobileAttendanceController extends Controller
 
     /**
      * Tampilkan riwayat presensi pribadi relawan/pegawai yang login.
+     * Mengikuti mode periode (bulanan atau mingguan) yang diatur oleh Admin.
      */
     public function history(Request $request): View
     {
         $user = $request->user();
         $peserta = $user->peserta;
 
-        $year = (int) $request->input('year', now('Asia/Jakarta')->year);
-        $month = (int) $request->input('month', now('Asia/Jakarta')->month);
+        $mode = Setting::getValue('relawan_recap_period_mode', 'bulanan');
+        if (! in_array($mode, ['bulanan', 'mingguan'], true)) {
+            $mode = 'bulanan';
+        }
 
-        $range = $this->attendanceCalculationService->getMonthlyPeriodRange($year, $month);
+        $now = Carbon::now('Asia/Jakarta');
+        $date = $request->input('date', $now->toDateString());
+        $year = (int) $request->input('year', $now->year);
+        $month = (int) $request->input('month', $now->month);
+
+        if ($mode === 'mingguan') {
+            $range = $this->attendanceCalculationService->getWeeklyPeriodRange($date);
+            $prevDate = $range['start']->copy()->subWeek()->toDateString();
+            $nextDate = $range['start']->copy()->addWeek()->toDateString();
+            $prevYear = null;
+            $prevMonth = null;
+            $nextYear = null;
+            $nextMonth = null;
+        } else {
+            $range = $this->attendanceCalculationService->getMonthlyPeriodRange($year, $month);
+            $range['label'] = $range['start']->translatedFormat('d M Y').' - '.$range['end']->translatedFormat('d M Y');
+            $currentMonthDt = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
+            $prevMonthDt = $currentMonthDt->copy()->subMonth();
+            $nextMonthDt = $currentMonthDt->copy()->addMonth();
+            $prevYear = $prevMonthDt->year;
+            $prevMonth = $prevMonthDt->month;
+            $nextYear = $nextMonthDt->year;
+            $nextMonth = $nextMonthDt->month;
+            $prevDate = null;
+            $nextDate = null;
+        }
 
         $attendances = collect();
         if ($peserta) {
@@ -379,9 +409,17 @@ class MobileAttendanceController extends Controller
             'user',
             'peserta',
             'attendances',
+            'mode',
+            'date',
             'year',
             'month',
             'range',
+            'prevDate',
+            'nextDate',
+            'prevYear',
+            'prevMonth',
+            'nextYear',
+            'nextMonth',
             'countTepatWaktu',
             'countBiasa',
             'totalScore'

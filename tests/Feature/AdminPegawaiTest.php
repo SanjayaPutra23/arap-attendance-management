@@ -24,7 +24,7 @@ class AdminPegawaiTest extends TestCase
 
     protected Role $roleOfficer;
 
-    protected Role $roleUmum;
+    protected Role $roleUltraman;
 
     protected function setUp(): void
     {
@@ -32,7 +32,7 @@ class AdminPegawaiTest extends TestCase
 
         $this->roleUser = Role::create(['name' => 'User']);
         $this->roleOfficer = Role::create(['name' => 'Officer']);
-        $this->roleUmum = Role::create(['name' => 'Umum']);
+        $this->roleUltraman = Role::create(['name' => 'Ultraman']);
 
         $this->relawanUser = User::factory()->create(['email' => 'relawan@arap.local']);
         $this->relawanUser->roles()->attach($this->roleUser);
@@ -40,8 +40,8 @@ class AdminPegawaiTest extends TestCase
         $this->officerUser = User::factory()->create(['email' => 'officer@arap.local']);
         $this->officerUser->roles()->attach($this->roleOfficer);
 
-        $this->umumUser = User::factory()->create(['email' => 'umum@arap.local']);
-        $this->umumUser->roles()->attach($this->roleUmum);
+        $this->umumUser = User::factory()->create(['email' => 'admin@arap.local']);
+        $this->umumUser->roles()->attach($this->roleUltraman);
     }
 
     public function test_unauthenticated_user_cannot_access_pegawai(): void

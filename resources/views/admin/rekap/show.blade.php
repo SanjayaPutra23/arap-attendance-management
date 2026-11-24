@@ -16,7 +16,7 @@
             </p>
         </div>
         <div>
-            <a href="{{ route('admin.rekap.index', ['year' => $year, 'month' => $month]) }}" class="btn btn-sm btn-outline-secondary">
+            <a href="{{ route('admin.rekap.index', ['mode' => $mode ?? 'bulanan', 'date' => $date ?? null, 'year' => $year, 'month' => $month]) }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Kembali ke Rekapitulasi
             </a>
         </div>

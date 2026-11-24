@@ -57,8 +57,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/rekap/{peserta}', [RekapController::class, 'show'])->name('rekap.show');
         });
 
-        // Restricted to Admin Umum (Ultraman, Umum): Kelola Pegawai, Review Izin, Settings
+        // Restricted to Admin Utama (Ultraman, can:umum): Kelola Pegawai, Review Izin, Settings, Mode Rekap
         Route::middleware('can:umum')->group(function () {
+            // Setting Mode Rekap Relawan (Bulanan vs Mingguan)
+            Route::post('/rekap/period-setting', [RekapController::class, 'savePeriodSetting'])->name('rekap.period-setting');
+
             // Manage Pegawai / Relawan & Officer CRUD
             Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
             Route::post('/pegawai', [PegawaiController::class, 'store'])->name('pegawai.store');

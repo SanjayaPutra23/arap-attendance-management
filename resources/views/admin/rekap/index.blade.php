@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Rekapitulasi Kehadiran Bulanan')
-@section('page_title', 'Rekapitulasi Kehadiran Periode 20 - 19')
+@section('title', $mode === 'mingguan' ? 'Rekapitulasi Presensi Mingguan' : 'Rekapitulasi Presensi Bulanan')
+@section('page_title', $mode === 'mingguan' ? 'Rekapitulasi Presensi Mingguan' : 'Rekapitulasi Presensi Periode 20 - 19')
 
 @section('content')
 <div class="container-fluid p-0">
     <!-- Header Page Info -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-2">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 gap-2">
         <div>
             <h4 class="fw-bold mb-1 text-primary-arap">
-                <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Rekapitulasi Kehadiran Gabungan (Periode 20 &ndash; 19)
+                <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Rekapitulasi Kehadiran Gabungan ({{ $mode === 'mingguan' ? 'Periode Mingguan' : 'Periode 20 – 19' }})
             </h4>
             <p class="text-muted small mb-0">
                 Kalkulasi poin kehadiran relawan & Officer menggabungkan Presensi Mobile GPS + Log Mesin Fingerprint + Izin Resmi SPPG Kalisapu.
@@ -27,30 +27,95 @@
         </div>
     </div>
 
-    <!-- Filter Card: Bulan, Tahun, Divisi, Search -->
+    <!-- Mode Selector Tabs: Bulanan (20-19) vs Mingguan -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+        <div class="btn-group" role="group" aria-label="Mode Rekapitulasi">
+            <a href="{{ route('admin.rekap.index', array_merge(request()->except(['mode', 'page']), ['mode' => 'bulanan'])) }}"
+               class="btn btn-sm {{ $mode === 'bulanan' ? 'btn-primary-arap fw-bold' : 'btn-outline-secondary' }}">
+                <i class="bi bi-calendar-month me-1"></i> Mode Bulanan (Cut-off 20 &ndash; 19)
+            </a>
+            <a href="{{ route('admin.rekap.index', array_merge(request()->except(['mode', 'page']), ['mode' => 'mingguan'])) }}"
+               class="btn btn-sm {{ $mode === 'mingguan' ? 'btn-primary-arap fw-bold' : 'btn-outline-secondary' }}">
+                <i class="bi bi-calendar-week me-1"></i> Mode Mingguan (Senin &ndash; Minggu)
+            </a>
+        </div>
+    </div>
+
+    <!-- Admin Setting Panel: Tampilan Riwayat Relawan (can:umum) -->
+    @can('umum')
+    <div class="card border-0 shadow-sm mb-4" style="background-color: #f1f5f9; border-left: 4px solid var(--arap-primary) !important;">
+        <div class="card-body p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary-arap text-white rounded p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-sliders fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark">Mode Riwayat Presensi Relawan (Mobile PWA)</h6>
+                    <small class="text-muted">
+                        Saat ini relawan melihat riwayat presensi dalam format:
+                        <span class="badge {{ $relawanRecapMode === 'mingguan' ? 'bg-info text-dark' : 'bg-success' }}">
+                            {{ $relawanRecapMode === 'mingguan' ? 'Mingguan (Senin - Minggu)' : 'Bulanan (Cut-off 20 - 19)' }}
+                        </span>
+                    </small>
+                </div>
+            </div>
+            <form method="POST" action="{{ route('admin.rekap.period-setting') }}" class="d-flex align-items-center gap-2 m-0">
+                @csrf
+                <select name="mode" class="form-select form-select-sm" style="width: auto;">
+                    <option value="bulanan" {{ $relawanRecapMode === 'bulanan' ? 'selected' : '' }}>Bulanan (Cut-off 20 - 19)</option>
+                    <option value="mingguan" {{ $relawanRecapMode === 'mingguan' ? 'selected' : '' }}>Mingguan (Senin - Minggu)</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary-arap text-nowrap">
+                    <i class="bi bi-check2-circle me-1"></i> Terapkan
+                </button>
+            </form>
+        </div>
+    </div>
+    @endcan
+
+    <!-- Filter Card: Bulan/Tahun atau Tanggal Minggu, Divisi, Search -->
     <div class="card border-0 shadow-sm bg-white mb-4">
         <div class="card-body p-3 p-md-4">
             <form method="GET" action="{{ route('admin.rekap.index') }}" id="filterRekapForm">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <label class="form-label small fw-semibold text-muted mb-1">Bulan Periode Berjalan</label>
-                        <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
-                            @for($m = 1; $m <= 12; $m++)
-                                <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create(2026, $m, 1)->translatedFormat('F') }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
+                <input type="hidden" name="mode" value="{{ $mode }}">
 
-                    <div class="col-12 col-sm-6 col-md-2">
-                        <label class="form-label small fw-semibold text-muted mb-1">Tahun</label>
-                        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-                            @for($y = date('Y') + 1; $y >= 2023; $y--)
-                                <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endfor
-                        </select>
-                    </div>
+                <div class="row g-3 align-items-end">
+                    @if($mode === 'bulanan')
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <label class="form-label small fw-semibold text-muted mb-1">Bulan Periode Berjalan</label>
+                            <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @for($m = 1; $m <= 12; $m++)
+                                    <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
+                                        {{ \Carbon\Carbon::create(2026, $m, 1)->translatedFormat('F') }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label class="form-label small fw-semibold text-muted mb-1">Tahun</label>
+                            <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @for($y = date('Y') + 1; $y >= 2023; $y--)
+                                    <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                    @else
+                        <div class="col-12 col-sm-6 col-md-5">
+                            <label class="form-label small fw-semibold text-muted mb-1">Pilih Tanggal Acuan Minggu</label>
+                            <div class="input-group input-group-sm">
+                                <a href="{{ route('admin.rekap.index', array_merge(request()->query(), ['date' => \Carbon\Carbon::parse($date)->subWeek()->toDateString()])) }}"
+                                   class="btn btn-outline-secondary" title="Minggu Sebelumnya">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                                <input type="date" name="date" class="form-control" value="{{ $date }}" onchange="this.form.submit()">
+                                <a href="{{ route('admin.rekap.index', array_merge(request()->query(), ['date' => \Carbon\Carbon::parse($date)->addWeek()->toDateString()])) }}"
+                                   class="btn btn-outline-secondary" title="Minggu Berikutnya">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="col-12 col-md-4">
                         <label class="form-label small fw-semibold text-muted mb-1">Pencarian Nama / NIK</label>
@@ -231,7 +296,7 @@
                                 </small>
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.rekap.show', [$row['peserta'], 'year' => $year, 'month' => $month]) }}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Lihat Rincian Harian">
+                                <a href="{{ route('admin.rekap.show', [$row['peserta'], 'mode' => $mode, 'date' => $date, 'year' => $year, 'month' => $month]) }}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Lihat Rincian Harian">
                                     <i class="bi bi-calendar3 me-1"></i> Harian
                                 </a>
                             </td>
