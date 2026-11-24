@@ -28,17 +28,23 @@ cd C:\laragon\www\arap-v2
 copy .env.example .env
 & "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan key:generate
 
-# 3. Instalasi Dependensi Composer
-& "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" C:\laragon\bin\composer\composer.phar install
+# 3. Setup Database arap_v2_dev & Migrasi Non-Destruktif
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS arap_v2_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+cmd /c "mysql -u root --default-character-set=utf8mb4 arap_v2_dev < database_sql\arap.sql"
+& "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan migrate
+& "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan db:seed --class=AttendanceLocationSeeder
 
-# 4. Instalasi & Build Asset Frontend
+# 4. Instalasi Dependensi Composer
+& "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" C:\ProgramData\ComposerSetup\bin\composer.phar install
+
+# 5. Instalasi & Build Asset Frontend
 npm install
 npm run build
 
-# 5. Menjalankan Server Lokal
+# 6. Menjalankan Server Lokal
 & "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan serve
 
-# 6. Menjalankan Automated Test Suite
+# 7. Menjalankan Automated Test Suite
 & "C:\laragon\bin\php\php-8.5.12-nts-Win32-vs17-x64\php.exe" artisan test
 ```
 

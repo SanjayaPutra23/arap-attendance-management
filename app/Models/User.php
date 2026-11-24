@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -61,6 +63,38 @@ class User extends Authenticatable
     }
 
     /**
+     * Data profil relawan / pegawai terkait (pesertas.id).
+     */
+    public function peserta(): BelongsTo
+    {
+        return $this->belongsTo(Peserta::class, 'peserta_id');
+    }
+
+    /**
+     * Rekaman presensi mobile relawan ini.
+     */
+    public function mobileAttendances(): HasMany
+    {
+        return $this->hasMany(MobileAttendance::class, 'user_id');
+    }
+
+    /**
+     * Log audit rekaman percobaan presensi.
+     */
+    public function attendanceAuditLogs(): HasMany
+    {
+        return $this->hasMany(AttendanceAuditLog::class, 'user_id');
+    }
+
+    /**
+     * Riwayat permohonan izin yang diajukan oleh user ini.
+     */
+    public function permohonanIzins(): HasMany
+    {
+        return $this->hasMany(PermohonanIzin::class, 'user_id');
+    }
+
+    /**
      * Cek apakah user memiliki 1 role tertentu (case-insensitive).
      */
     public function hasAnyRole(string $role): bool
@@ -88,6 +122,7 @@ class User extends Authenticatable
         }
 
         $lowerRoles = array_map('strtolower', $roles);
+
         return $this->roles->contains(function ($r) use ($lowerRoles) {
             return in_array(strtolower($r->name), $lowerRoles, true);
         });

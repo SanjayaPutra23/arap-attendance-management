@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -45,8 +46,8 @@ class FortifyServiceProvider extends ServiceProvider
                 ->first();
 
             // 2. Jika belum ditemukan dan model Peserta ada, cari via relasi peserta
-            if (!$user && class_exists(\App\Models\Peserta::class)) {
-                $peserta = \App\Models\Peserta::where('nik', $login)
+            if (! $user && class_exists(Peserta::class)) {
+                $peserta = Peserta::where('nik', $login)
                     ->orWhere('uid', $login)
                     ->first();
                 if ($peserta) {

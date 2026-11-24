@@ -46,7 +46,7 @@
                         </div>
                     </div>
                     <h5 class="fw-bold mb-1">Geofencing & Selfie</h5>
-                    <p class="text-muted small mb-3">Check-in / Check-out presensi dengan kamera langsung & validasi radius SPPG.</p>
+                    <p class="text-muted small mb-3">Tersedia untuk {{ $totalPeserta ?? 0 }} Relawan & Staf SPPG Kalisapu aktif.</p>
                     <button class="btn btn-sm btn-outline-primary w-100 fw-semibold" onclick="alert('Fitur Presensi Mobile GPS & Kamera akan aktif di Phase 4.')">
                         <i class="bi bi-camera me-1"></i> Buka Kamera Presensi
                     </button>
@@ -64,7 +64,7 @@
                         </div>
                     </div>
                     <h5 class="fw-bold mb-1">Log & Arsip Mesin</h5>
-                    <p class="text-muted small mb-3">Riwayat log mesin FPDAPUR1 dan presensi mobile terintegrasi.</p>
+                    <p class="text-muted small mb-3">Arsip {{ number_format($totalPools ?? 0, 0, ',', '.') }} log mesin FPDAPUR1 & presensi mobile.</p>
                     <button class="btn btn-sm btn-outline-success w-100 fw-semibold" onclick="alert('Riwayat kehadiran sedang disiapkan.')">
                         <i class="bi bi-list-check me-1"></i> Lihat Riwayat Log
                     </button>

@@ -11,19 +11,31 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->text('two_factor_secret')
-                ->after('password')
-                ->nullable();
+        $hasSecret = Schema::hasColumn('users', 'two_factor_secret');
+        $hasRecovery = Schema::hasColumn('users', 'two_factor_recovery_codes');
+        $hasConfirmed = Schema::hasColumn('users', 'two_factor_confirmed_at');
 
-            $table->text('two_factor_recovery_codes')
-                ->after('two_factor_secret')
-                ->nullable();
+        if (! $hasSecret || ! $hasRecovery || ! $hasConfirmed) {
+            Schema::table('users', function (Blueprint $table) use ($hasSecret, $hasRecovery, $hasConfirmed) {
+                if (! $hasSecret) {
+                    $table->text('two_factor_secret')
+                        ->after('password')
+                        ->nullable();
+                }
 
-            $table->timestamp('two_factor_confirmed_at')
-                ->after('two_factor_recovery_codes')
-                ->nullable();
-        });
+                if (! $hasRecovery) {
+                    $table->text('two_factor_recovery_codes')
+                        ->after('two_factor_secret')
+                        ->nullable();
+                }
+
+                if (! $hasConfirmed) {
+                    $table->timestamp('two_factor_confirmed_at')
+                        ->after('two_factor_recovery_codes')
+                        ->nullable();
+                }
+            });
+        }
     }
 
     /**
@@ -32,11 +44,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn([
-                'two_factor_secret',
-                'two_factor_recovery_codes',
-                'two_factor_confirmed_at',
-            ]);
+            $columns = array_filter(
+                ['two_factor_confirmed_at', 'two_factor_recovery_codes', 'two_factor_secret'],
+                fn ($col) => Schema::hasColumn('users', $col)
+            );
+
+            if (! empty($columns)) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };
