@@ -95,9 +95,23 @@
             <span>Jam Kerja Divisi</span>
         </a>
     </li>
+
+    <li class="nav-item">
+        <a href="{{ route('admin.libur.index') }}" class="nav-link {{ request()->routeIs('admin.libur.*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-event text-danger"></i>
+            <span>Hari Libur Nasional</span>
+        </a>
+    </li>
     @endcan
 
     <li class="my-2 border-top border-sidebar-divider"></li>
+
+    <li class="nav-item">
+        <a href="{{ route('profile.password.edit') }}" class="nav-link {{ request()->routeIs('profile.password.*') ? 'active' : '' }}">
+            <i class="bi bi-shield-lock text-warning"></i>
+            <span>Ganti Password</span>
+        </a>
+    </li>
 
     <li class="nav-item">
         <form method="POST" action="{{ route('logout') }}" class="m-0">

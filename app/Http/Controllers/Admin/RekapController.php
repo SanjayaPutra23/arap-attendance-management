@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -200,6 +201,53 @@ class RekapController extends Controller
             'divisi' => $divisi,
             'printedAt' => Carbon::now('Asia/Jakarta'),
         ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Ekspor rincian harian kehadiran untuk 1 orang peserta ke format PDF portrait siap cetak.
+     */
+    public function exportIndividualPdf(Request $request, Peserta $peserta): Response
+    {
+        $now = Carbon::now('Asia/Jakarta');
+        $mode = $request->input('mode', 'bulanan');
+        if (! in_array($mode, ['bulanan', 'mingguan'], true)) {
+            $mode = 'bulanan';
+        }
+
+        $date = $request->input('date', $now->toDateString());
+        $year = (int) $request->input('year', $now->year);
+        $month = (int) $request->input('month', $now->month);
+
+        $recap = $this->recapService->generateRecap(
+            $year,
+            $month,
+            null,
+            $peserta->nik ?: $peserta->name,
+            $mode,
+            $date
+        );
+        $pesertaRecord = collect($recap['records'])->firstWhere('peserta.id', $peserta->id);
+
+        if (! $pesertaRecord) {
+            abort(404, 'Data rekap peserta tidak ditemukan untuk periode ini.');
+        }
+
+        $identifier = $peserta->nik ? preg_replace('/[^A-Za-z0-9_-]/', '', $peserta->nik) : Str::slug($peserta->name);
+        $periodSuffix = $mode === 'mingguan'
+            ? 'Mingguan_'.$recap['period']['start']->format('Ymd').'_'.$recap['period']['end']->format('Ymd')
+            : $year.'_'.str_pad((string) $month, 2, '0', STR_PAD_LEFT);
+
+        $fileName = "Detail_Presensi_{$identifier}_{$periodSuffix}.pdf";
+
+        $pdf = Pdf::loadView('admin.rekap.individual-pdf', [
+            'peserta' => $peserta,
+            'record' => $pesertaRecord,
+            'recap' => $recap,
+            'mode' => $mode,
+            'printedAt' => Carbon::now('Asia/Jakarta'),
+        ])->setPaper('a4', 'portrait');
 
         return $pdf->download($fileName);
     }

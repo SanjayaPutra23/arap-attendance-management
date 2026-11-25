@@ -15,7 +15,10 @@
                 Divisi: <strong>{{ $peserta->jabatan }}</strong> &bull; NIK: {{ $peserta->nik ?? '-' }} &bull; UID: {{ $peserta->uid ?? '-' }} &bull; Periode: <strong>{{ $recap['period']['label'] }}</strong>
             </p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('admin.rekap.individual-pdf', ['peserta' => $peserta->id, 'mode' => $mode ?? 'bulanan', 'date' => $date ?? null, 'year' => $year, 'month' => $month]) }}" class="btn btn-sm btn-danger">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Cetak PDF Detail
+            </a>
             <a href="{{ route('admin.rekap.index', ['mode' => $mode ?? 'bulanan', 'date' => $date ?? null, 'year' => $year, 'month' => $month]) }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Kembali ke Rekapitulasi
             </a>

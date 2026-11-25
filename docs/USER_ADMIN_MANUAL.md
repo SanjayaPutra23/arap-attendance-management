@@ -13,6 +13,7 @@
    - 1.5 [Solusi Kendala GPS Tidak Terdeteksi atau Di Luar Radius](#15-solusi-kendala-gps-tidak-terdeteksi-atau-di-luar-radius)
    - 1.6 [Memahami Skor & Perolehan Poin Kehadiran](#16-memahami-skor--perolehan-poin-kehadiran)
    - 1.7 [Mengajukan Izin atau Sakit dengan Lampiran Surat Dokter](#17-mengajukan-izin-atau-sakit-dengan-lampiran-surat-dokter)
+   - 1.8 [Ganti Kata Sandi Mandiri (Self-Service Password)](#18-ganti-kata-sandi-mandiri-self-service-password)
 2. [BAGIAN 2 — PANDUAN ADMINISTRATOR & TATA USAHA (PAK ASLAP)](#bagian-2--panduan-administrator--tata-usaha-pak-aslap)
    - 2.1 [Membaca Dashboard KPI Kehadiran Harian](#21-membaca-dashboard-kpi-kehadiran-harian)
    - 2.2 [Monitoring Presensi Realtime, Peta Sebaran & Bukti Selfie](#22-monitoring-presensi-realtime-peta-sebaran--bukti-selfie)
@@ -25,6 +26,11 @@
    - 2.9 [Mencetak Rekapitulasi Kehadiran Bulanan 20–19 (Excel & PDF Resmi)](#29-mencetak-rekapitulasi-kehadiran-bulanan-2019-excel--pdf-resmi)
    - 2.10 [Kelola Mesin Fingerprint (IP & Port) & Tarik Data Presensi ZKTeco](#210-kelola-mesin-fingerprint-ip--port--tarik-data-presensi-zkteco)
    - 2.11 [Pengaturan Mode Rekapitulasi Presensi (Bulanan 20–19 vs Mingguan)](#211-pengaturan-mode-rekapitulasi-presensi-bulanan-2019-vs-mingguan)
+   - 2.12 [Kelola Hari Libur Nasional & Sinkronisasi API](#212-kelola-hari-libur-nasional--sinkronisasi-api)
+   - 2.13 [Cetak PDF Detail Kehadiran Individu untuk Klarifikasi Poin](#213-cetak-pdf-detail-kehadiran-individu-untuk-klarifikasi-poin)
+3. [BAGIAN 3 — STANDAR OPERASIONAL PROSEDUR (SOP) PENDAFTARAN RELAWAN BARU](#bagian-3--standar-operasional-prosedur-sop-pendaftaran-relawan-baru)
+   - 3.1 [Gambaran Alur Integrasi Hybrid](#31-gambaran-alur-integrasi-hybrid)
+   - 3.2 [Langkah Demi Langkah Pendaftaran Relawan Baru](#32-langkah-demi-langkah-pendaftaran-relawan-baru)
 
 ---
 
@@ -115,6 +121,19 @@ Jika Anda berhalangan hadir karena sakit atau ada keperluan mendesak:
    - **Unggah Surat Bukti:** Khusus untuk sakit, lampirkan foto surat keterangan dokter/klinik (format JPG, PNG, atau PDF maksimal 3 MB).
 4. Ketuk **Kirim Permohonan**.
 5. Status pengajuan akan berstatus **"Menunggu"** hingga diverifikasi oleh staf Tata Usaha. Selama masih berstatus menunggu, Anda dapat membatalkan pengajuan jika sewaktu-waktu batal izin.
+
+---
+
+### 1.8 Ganti Kata Sandi Mandiri (Self-Service Password)
+Setiap pengguna (Relawan, Officer, maupun Admin) dapat memperbarui kata sandi akunnya sendiri kapan saja demi keamanan:
+1. Klik nama profil Anda di pojok kanan atas layar (topbar) lalu pilih **Ganti Password**, atau klik menu **Ganti Password** pada sidebar sebelah kiri.
+2. Pada formulir yang muncul:
+   - **Kata Sandi Saat Ini:** Masukkan kata sandi lama Anda untuk verifikasi identitas.
+   - **Kata Sandi Baru:** Masukkan kata sandi baru (minimal 8 karakter kombinasi huruf dan angka).
+   - **Konfirmasi Kata Sandi Baru:** Masukkan ulang kata sandi baru persis sama.
+   - *Tips:* Anda dapat mengklik ikon mata di samping setiap kolom untuk memastikan ejaan kata sandi tidak salah ketik.
+3. Klik tombol **Perbarui Kata Sandi**.
+4. Sistem akan memperbarui kata sandi Anda dan memperbarui sesi login secara aman. Gunakan kata sandi baru ini untuk login berikutnya.
 
 ---
 
@@ -273,3 +292,133 @@ Administrator dapat menentukan mode periode rekapitulasi kehadiran yang aktif di
    - **Mingguan (Senin–Minggu):** Periode rekapitulasi berbasis mingguan dari hari Senin hingga Minggu pekan berjalan.
 3. Klik **Simpan Pengaturan Mode**.
 4. Mode yang dipilih akan otomatis menjadi default pada tampilan Rekapitulasi Admin dan tampilan Riwayat Presensi Relawan/Pegawai.
+
+---
+
+### 2.12 Kelola Hari Libur Nasional & Sinkronisasi API
+Daftar hari libur nasional digunakan secara otomatis oleh engine rekapitulasi presensi ARAP v2. Pada tanggal merah resmi, relawan tidak dijadwalkan hadir sehingga tidak akan dicatat sebagai Alpha:
+1. Buka menu **Hari Libur Nasional** (`/admin/libur`) pada sidebar kelompok *Pengaturan & Master*.
+2. **Melihat & Memfilter Hari Libur:**
+   - Gunakan dropdown **Filter Tahun** untuk melihat kalender libur tahun berjalan (misal: 2026) maupun arsip tahun-tahun sebelumnya.
+   - Gunakan kotak **Cari Keterangan** untuk mencari hari libur tertentu (misal: *"Idul Fitri"*, *"Natal"*, *"Pancasila"*).
+3. **Menambah Hari Libur Baru Secara Manual:**
+   - Klik tombol **Tambah Hari Libur**.
+   - Masukkan tanggal (format kalender) dan nama keterangan libur nasional atau cuti bersama.
+   - Klik **Simpan Hari Libur**. Sistem secara otomatis memproteksi agar tidak ada tanggal libur ganda.
+4. **Sinkronisasi Otomatis dari API Nasional:**
+   - Untuk mengisi hari libur tahun baru (misal tahun 2027) tanpa perlu mengetik satu per satu:
+     - Klik tombol **Sinkronkan Libur Nasional (API)** di bagian atas halaman.
+     - Pilih tahun target yang ingin ditarik.
+     - Klik **Mulai Sinkronisasi**.
+     - Sistem akan terhubung ke API hari libur nasional resmi Republik Indonesia dan menyimpan seluruh hari libur tanpa menduplikasi data yang sudah ada sebelumnya. Jika server sedang offline, sistem akan menampilkan notifikasi ramah agar admin dapat melanjutkan input secara manual.
+
+---
+
+### 2.13 Cetak PDF Detail Kehadiran Individu untuk Klarifikasi Poin
+Apabila seorang relawan atau staf memerlukan rincian bukti kehadiran perorangan (misal untuk klarifikasi jam kerja atau rekap poin gaji kepada Pak Aslap):
+1. Buka menu **Rekapitulasi (20–19)** (`/admin/rekap`).
+2. Tentukan periode **Bulan** dan **Tahun** (atau mode **Mingguan**).
+3. Cari nama relawan yang bersangkutan, lalu klik tombol **Rincian** (ikon mata/baris nama) untuk membuka halaman rincian harian (`/admin/rekap/{peserta}`).
+4. Pada halaman rincian harian, klik tombol merah **Cetak PDF Detail** di kanan atas.
+5. Dokumen resmi **Landscape/Portrait A4** akan terunduh otomatis dengan nama berkas `Detail_Presensi_{NIK}_{Periode}.pdf` yang memuat:
+   - Kop resmi **Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu**.
+   - Kotak profil lengkap: Nama, NIK, Divisi/Jabatan, UID Mesin, Periode Laporan, dan Waktu Cetak.
+   - Kotak ringkasan metrik kehadiran (Hadir Tepat Waktu, Terlambat/Awal, Izin, Sakit, Alpha, dan Total Akumulasi Poin).
+   - Tabel catatan harian per tanggal: jam masuk (IN), jam pulang (OUT), sumber kehadiran (*Mobile PWA* atau *Mesin Fisik*), skor poin harian, dan catatan status.
+   - 3 Blok kolom tanda tangan klarifikasi: **Relawan Bersangkutan**, **Petugas Tata Usaha**, dan **Mengetahui Pengelola SPPG Kalisapu (Pak Aslap)**.
+
+---
+
+# BAGIAN 3 — STANDAR OPERASIONAL PROSEDUR (SOP) PENDAFTARAN RELAWAN BARU
+
+SOP ini mengatur alur pendaftaran relawan baru di SPPG Kalisapu dari perangkat fisik mesin absensi sidik jari ZKTeco hingga terhubung ke aplikasi ARAP v2.
+
+---
+
+### 3.1 Gambaran Alur Integrasi Hybrid
+ARAP v2 menerapkan model presensi **Hybrid**:
+- **Mesin Fingerprint Fisik (`FPDAPUR1`):** Digunakan di area dapur SPPG Kalisapu untuk verifikasi sidik jari langsung.
+- **Mobile Attendance (PWA):** Digunakan melalui smartphone dengan kamera live selfie dan validasi GPS geofencing radius 100 meter dari SPPG.
+
+Kedua metode ini terintegrasi 100% menggunakan parameter kunci:
+- **`pesertas.uid`:** Nomor identitas pengguna di mesin fingerprint fisik (misal: UID `105`).
+- **`pesertas.nik` & `users.email`:** Nomor identitas KTP dan akun login website/PWA.
+
+---
+
+### 3.2 Langkah Demi Langkah Pendaftaran Relawan Baru
+
+```
++-----------------------------------------------------------------------------------+
+| 1. DAFTARKAN DI MESIN FISIK -> Catat UID (misal ID: 105)                          |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+| 2. INPUT MASTER PEGAWAI DI ARAP v2 -> Isi Nama, NIK, Divisi, dan UID: 105         |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+| 3. BUATKAN AKUN LOGIN -> Centang Buatkan Akun, isi Email & Password Awal          |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+| 4. UJI COBA & SINKRONISASI -> Scan sidik jari di mesin & test check-in di web PWA |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+| 5. VERIFIKASI SELESAI -> Log fingerprint masuk ke pools, rekap bulanan terhubung  |
++-----------------------------------------------------------------------------------+
+```
+
+#### Langkah 1: Pendaftaran Sidik Jari pada Mesin Fisik ZKTeco `FPDAPUR1`
+1. Datangi mesin absensi fingerprint yang terpasang di dapur SPPG Kalisapu.
+2. Tekan tombol **`M/OK`** pada mesin untuk membuka menu (masuk menggunakan kartu/sidik jari admin mesin jika terkunci).
+3. Pilih menu **User Mgt** (Manajemen Pengguna) -> pilih **New User** (Pengguna Baru).
+4. Mesin akan menampilkan nomor ID pengguna berikutnya secara berurutan (contoh: **`105`**).
+   > **PENTING:** Catat nomor ID ini! Nomor ini adalah **UID Mesin** yang wajib dimasukkan ke website ARAP v2.
+5. Arahkan kursor ke opsi **Fingerprint** (Sidik Jari), lalu tekan `M/OK`.
+6. Minta relawan menempelkan jari telunjuk (disarankan mendaftarkan 2 jari: telunjuk kanan dan telunjuk kiri) sebanyak 3 kali berturut-turut pada sensor scanner hingga mesin berbunyi *"Terima Kasih"*.
+7. Tekan tombol `ESC` beberapa kali hingga kembali ke layar utama mesin absensi.
+
+#### Langkah 2: Pendaftaran Data Master Pegawai di Web ARAP v2
+1. Buka peramban di komputer Tata Usaha, kunjungi website ARAP v2, dan login menggunakan akun Administrator (`Ultraman`).
+2. Buka menu **Master Pegawai / Officer** (`/admin/pegawai`).
+3. Klik tombol **Tambah Pegawai / Officer**.
+4. Lengkapi isian data:
+   - **Nama Lengkap:** Nama lengkap relawan sesuai KTP.
+   - **Nomor Induk Kependudukan (NIK):** 16 digit NIK resmi relawan.
+   - **UID Mesin Fingerprint:** Masukkan nomor ID yang dicatat dari mesin pada Langkah 1 (contoh: **`105`**).
+     *Perhatian: Jika kolom UID ini tidak diisi atau salah ketik, log absensi sidik jari dari mesin fisik tidak akan tersambung ke nama relawan.*
+   - **Divisi / Jabatan:** Pilih divisi kerja relawan (misal: *Persiapan*, *Pengolahan*, *Pemorsian*, *Distribusi*, *Kebersihan*, *Security*, atau *Ompreng*).
+   - **Nomor Telepon:** Nomor WhatsApp aktif relawan.
+
+#### Langkah 3: Pembuatan Akun Login Mobile PWA
+1. Masih pada formulir penambahan pegawai yang sama, scroll ke bagian **Informasi Akun Login**:
+2. Beri tanda centang pada opsi **"Buatkan Akun Login Sekaligus"**.
+3. Masukkan **Alamat Email** relawan (akan digunakan untuk login alternatif atau reset password).
+4. Masukkan **Kata Sandi Awal** (contoh: `Sppg2026!`).
+5. Pilih **Role Akun**:
+   - Pilih **`User`** untuk Relawan Dapur biasa.
+   - Pilih **`Officer`** jika personel tersebut adalah koordinator/pengawas lapangan.
+6. Klik tombol **Simpan Data Pegawai**.
+
+#### Langkah 4: Uji Coba Presensi & Sinkronisasi Data
+1. **Uji Coba Mesin Fisik:**
+   - Minta relawan menempelkan jari di mesin dapur `FPDAPUR1`.
+   - Pastikan mesin berbunyi sukses *"Terima Kasih"*.
+   - Di web ARAP v2, buka menu **Kelola Mesin & Sync** (`/admin/mesin`).
+   - Klik tombol **Check Koneksi** untuk memastikan mesin online, lalu klik **Sinkronkan Data**.
+   - Buka menu **Arsip Fingerprint** (`/admin/arsip-fingerprint`), cari nama relawan dan pastikan log scan barusan sudah masuk ke tabel `pools`.
+2. **Uji Coba Presensi Mobile (PWA):**
+   - Minta relawan membuka `https://presensi.sppgkalisapu.id` di HP mereka.
+   - Relawan dapat login menggunakan **NIK 16 digit** atau **Email** beserta kata sandi awal yang telah dibuatkan.
+   - Relawan membuka menu **Presensi Mobile**, menyetujui izin lokasi & kamera, mengambil foto selfie, dan mengirim check-in.
+   - Buka menu **Monitoring Presensi** (`/admin/monitoring`), pastikan status check-in, foto selfie, dan titik koordinat relawan muncul di peta.
+3. Minta relawan masuk ke menu **Ganti Password** untuk memperbarui kata sandi awal mereka menjadi kata sandi pribadi yang aman.
+
+#### Langkah 5: Selesai
+Relawan kini resmi terdaftar di SPPG Kalisapu. Sistem ARAP v2 akan secara otomatis menghitung kehadiran harian relawan baik saat menggunakan mesin fingerprint di dapur maupun melalui smartphone di lokasi geofence SPPG. Laporan bulanan akan otomatis terakumulasi pada menu **Rekapitulasi (20–19)**.

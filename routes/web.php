@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminIzinController;
 use App\Http\Controllers\Admin\ArsipFingerprintController;
 use App\Http\Controllers\Admin\AttendanceLocationController;
+use App\Http\Controllers\Admin\LiburController;
 use App\Http\Controllers\Admin\MesinController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\PegawaiController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IzinAttachmentController;
 use App\Http\Controllers\IzinController;
 use App\Http\Controllers\MobileAttendanceController;
+use App\Http\Controllers\ProfilePasswordController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -31,6 +33,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/izin', [IzinController::class, 'index'])->name('izin.index');
     Route::post('/izin', [IzinController::class, 'store'])->name('izin.store');
     Route::delete('/izin/{permohonanIzin}', [IzinController::class, 'destroy'])->name('izin.destroy');
+
+    // Ganti Kata Sandi Mandiri (Profil)
+    Route::get('/profile/password', [ProfilePasswordController::class, 'edit'])->name('profile.password.edit');
+    Route::put('/profile/password', [ProfilePasswordController::class, 'update'])->name('profile.password.update');
 
     // Private Attendance Photos & Izin Attachments (Authorized Streams Anti-IDOR)
     Route::get('/attendance-photos/{attendancePhoto}', [AttendancePhotoController::class, 'show'])->name('attendance-photos.show');
@@ -55,6 +61,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
             Route::get('/rekap/export/excel', [RekapController::class, 'exportExcel'])->name('rekap.export-excel');
             Route::get('/rekap/export/pdf', [RekapController::class, 'exportPdf'])->name('rekap.export-pdf');
+            Route::get('/rekap/{peserta}/pdf', [RekapController::class, 'exportIndividualPdf'])->name('rekap.individual-pdf');
             Route::get('/rekap/{peserta}', [RekapController::class, 'show'])->name('rekap.show');
         });
 
@@ -71,6 +78,15 @@ Route::middleware('auth')->group(function () {
 
             // Approval / Review Izin
             Route::post('/izin/{permohonanIzin}/review', [AdminIzinController::class, 'review'])->name('izin.review');
+
+            // Kelola Hari Libur Nasional
+            Route::prefix('libur')->name('libur.')->group(function () {
+                Route::get('/', [LiburController::class, 'index'])->name('index');
+                Route::post('/', [LiburController::class, 'store'])->name('store');
+                Route::post('/sync-api', [LiburController::class, 'syncApi'])->name('sync-api');
+                Route::put('/{libur}', [LiburController::class, 'update'])->name('update');
+                Route::delete('/{libur}', [LiburController::class, 'destroy'])->name('destroy');
+            });
 
             // Kelola Mesin Fingerprint & Tarik Data ZKTeco
             Route::prefix('mesin')->name('mesin.')->group(function () {

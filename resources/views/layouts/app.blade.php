@@ -117,6 +117,12 @@
                                     @endif
                                 </li>
                                 <li>
+                                    <a href="{{ route('profile.password.edit') }}" class="dropdown-item small py-2 d-flex align-items-center gap-2">
+                                        <i class="bi bi-key text-primary"></i> Ganti Password
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm" class="m-0">
                                         @csrf
                                         <button type="submit" class="dropdown-item text-danger small py-2 d-flex align-items-center gap-2">
