@@ -22,7 +22,7 @@
    - 2.5 [Mengatur Jam Kerja per Divisi & Officer](#25-mengatur-jam-kerja-per-divisi--officer)
    - 2.6 [Manajemen Master Data Pegawai, Officer & Pembuatan Akun Login](#26-manajemen-master-data-pegawai-officer--pembuatan-akun-login)
    - 2.7 [Verifikasi & Persetujuan Permohonan Izin / Sakit](#27-verifikasi--persetujuan-permohonan-izin--sakit)
-   - 2.8 [Membuka Arsip Log Fingerprint Mesin Lama (9.838 Data Pools)](#28-membuka-arsip-log-fingerprint-mesin-lama-9838-data-pools)
+   - 2.8 [Membuka Arsip Log Fingerprint Mesin Lama & Deteksi Orphan UID](#28-membuka-arsip-log-fingerprint-mesin-lama-9838-data-pools--deteksi-orphan-uid)
    - 2.9 [Mencetak Rekapitulasi Kehadiran Bulanan 20–19 (Excel & PDF Resmi)](#29-mencetak-rekapitulasi-kehadiran-bulanan-2019-excel--pdf-resmi)
    - 2.10 [Kelola Mesin Fingerprint (IP & Port) & Tarik Data Presensi ZKTeco](#210-kelola-mesin-fingerprint-ip--port--tarik-data-presensi-zkteco)
    - 2.11 [Pengaturan Mode Rekapitulasi Presensi (Bulanan 20–19 vs Mingguan)](#211-pengaturan-mode-rekapitulasi-presensi-bulanan-2019-vs-mingguan)
@@ -200,18 +200,28 @@ Setiap divisi memiliki pola jam kerja operasional yang berbeda (misal divisi per
 ---
 
 ### 2.6 Manajemen Master Data Pegawai, Officer & Pembuatan Akun Login
-Menu **Master Pegawai / Officer** (`/admin/pegawai`) digunakan untuk mengelola data relawan:
-1. **Filter & Pencarian:** Filter berdasarkan divisi kerja, status kepemilikan akun login (*Sudah Punya Akun* vs *Belum Punya Akun*), atau cari berdasarkan Nama/NIK/UID.
-2. **Menambah Pegawai & Akun Sekaligus:**
-   - Ketuk tombol **Tambah Pegawai / Officer**.
-   - Masukkan Nama Lengkap, NIK (16 digit), UID Mesin (jika memakai mesin fingerprint lama), Divisi/Jabatan, dan Nomor Telepon.
-   - Pada bagian *Akun Login*: centang opsi buatkan akun, masukkan email, password awal, dan tentukan Role (misal: *Officer*, *User*, atau *Tata Usaha*).
+Menu **Master Pegawai / Officer** (`/admin/pegawai`) digunakan untuk mengelola data relawan dan staf:
+1. **Filter & Pencarian Komprehensif:**
+   - Filter cepat berdasarkan status keaktifan: **Semua**, **Aktif Saja**, atau **Nonaktif / Diarsipkan**.
+   - Filter divisi kerja (*Persiapan*, *Pengolahan*, *Pemorsian*, *Ompreng*, *Distribusi*, *Kebersihan*, *Security*, *Officer*).
+   - Filter kepemilikan akun login (*Sudah Punya Akun* vs *Belum Punya Akun*).
+   - Pencarian cerdas berdasarkan Nama, Nomor Induk/NIK, atau UID Mesin Fingerprint.
+2. **Menambah Pegawai & Akun Sekaligus (Password Default Fleksibel):**
+   - Ketuk tombol **Tambah Pegawai / Officer Baru**.
+   - Masukkan **Nama Lengkap**, **Nomor Induk / ID Relawan** (bisa berupa ID pendek seperti `1051` atau 16 digit NIK KTP), **UID Mesin Fingerprint** (opsional, nomor ID di mesin fisik misal `1051`), Divisi/Jabatan, dan Nomor Telepon.
+   - Pada bagian *Akun Login*: centang opsi buatkan akun, masukkan email login (misal `pegawai@arap.local`).
+   - **Password Default = Nomor Induk / UID:** Kolom password **dapat dikosongkan**. Jika dikosongkan, sistem otomatis menetapkan kata sandi awal sama dengan Nomor Induk / UID relawan (misal: `1051`). Relawan dapat langsung login dan mengganti kata sandi menjadi lebih aman secara mandiri. Admin juga dapat mengetikkan password pendek (misal 4 karakter) tanpa terblokir validasi rumit.
    - Ketuk **Simpan Data Pegawai**.
 3. **Mengedit Profil / Mereset Password:**
-   - Klik tombol edit (pensil) pada baris pegawai yang dituju.
-   - Anda dapat memperbarui data atau mengisi password baru jika relawan lupa password.
-4. **Proteksi Anti-Hapus Data Historis:**
-   - Tombol hapus pegawai diproteksi secara otomatis. Jika pegawai telah memiliki riwayat presensi di mesin fingerprint `pools` atau presensi mobile, sistem akan menolak penghapusan demi menjaga integritas arsip laporan.
+   - Klik tombol edit (pensil biru) pada baris pegawai yang dituju.
+   - Anda dapat memperbarui data atau mengisi password baru jika relawan membutuhkan reset password dari Admin.
+4. **Fitur Nonaktifkan Pegawai (Soft-Deactivate) & Proteksi Data Historis:**
+   - **Mengapa Tombol Hapus Diproteksi?** Pegawai yang telah memiliki riwayat presensi di mesin fingerprint `pools` atau presensi mobile tidak boleh dihapus dari database. Jika dihapus paksa, rekapitulasi bulan-bulan sebelumnya akan menjadi pincang (orphan log) dan merusak integritas arsip laporan keuangan/operasional SPPG.
+   - **Gunakan Tombol Nonaktifkan (Kuning):** Pada kolom aksi, klik tombol kuning bergambar silang (**Nonaktifkan Pegawai**). Pegawai akan langsung diarsipkan dengan konsekuensi aman:
+     - Akun pegawai langsung diblokir dari login sistem dengan pesan ramah (*"Akun Anda berstatus nonaktif. Silakan hubungi Admin/Tata Usaha SPPG Kalisapu."*).
+     - Pegawai tidak lagi muncul di halaman Rekapitulasi Presensi aktif, Monitoring Realtime, maupun penghitungan KPI Dashboard.
+     - Seluruh riwayat presensi masa lalu di database tetap tersimpan 100% utuh.
+   - **Mengaktifkan Kembali:** Jika pegawai kembali bekerja, buka filter *Nonaktif / Diarsipkan*, lalu klik tombol hijau (**Aktifkan Kembali Pegawai**). Seluruh hak akses dan rekap akan langsung aktif kembali.
 
 ---
 
@@ -227,11 +237,16 @@ Menu **Verifikasi Izin** (`/admin/izin`) menampilkan antrean permohonan staf:
 
 ---
 
-### 2.8 Membuka Arsip Log Fingerprint Mesin Lama (9.838 Data Pools)
+### 2.8 Membuka Arsip Log Fingerprint Mesin Lama (9.838 Data Pools) & Deteksi Orphan UID
 Seluruh 9.838 riwayat scan sidik jari mesin lama `FPDAPUR1` tersimpan utuh dan dapat ditelusuri:
 1. Buka menu **Arsip Fingerprint** (`/admin/arsip-fingerprint`).
 2. Gunakan filter rentang tanggal, filter mesin, atau cari berdasarkan nama relawan / UID mesin.
 3. Halaman ini bersifat *read-only* (hanya baca) untuk memastikan keaslian arsip historis tidak berubah.
+4. **Panel Peringatan Deteksi UID Mesin Belum Terdaftar (Orphan UID Detector):**
+   - Jika ada relawan yang melakukan scan tap sidik jari di mesin fisik ZKTeco, namun nomor ID mesin (UID) tersebut belum dipetakan ke profil relawan di Master Pegawai (misalnya: saat mesin memberikan nomor baru seperti `1059` atau `1060`), sistem akan otomatis memunculkan panel peringatan kuning di bagian atas:
+     > **"Terdeteksi X UID Mesin Belum Terdaftar di Master Pegawai"**
+   - Panel ini menampilkan daftar UID yang aktif melakukan tap di mesin, total rekaman log, dan tanggal terakhir mesin membaca tap.
+   - Admin cukup mengklik tombol tautan **Buka Master Pegawai**, lalu masukkan nomor UID tersebut pada profil pegawai yang bersangkutan. Seketika itu juga seluruh log tap mesin akan langsung terhubung dan otomatis masuk ke rekapitulasi kehadiran tanpa ada data yang tercecer.
 
 ---
 

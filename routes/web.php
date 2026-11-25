@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
             // Manage Pegawai / Relawan & Officer CRUD
             Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
             Route::post('/pegawai', [PegawaiController::class, 'store'])->name('pegawai.store');
+            Route::patch('/pegawai/{pegawai}/toggle-status', [PegawaiController::class, 'toggleStatus'])->name('pegawai.toggle-status');
             Route::put('/pegawai/{pegawai}', [PegawaiController::class, 'update'])->name('pegawai.update');
             Route::delete('/pegawai/{pegawai}', [PegawaiController::class, 'destroy'])->name('pegawai.destroy');
 

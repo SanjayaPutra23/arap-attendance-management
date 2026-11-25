@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -56,6 +57,12 @@ class FortifyServiceProvider extends ServiceProvider
             }
 
             if ($user && Hash::check($password, $user->password)) {
+                if ($user->peserta && ! $user->peserta->is_active) {
+                    throw ValidationException::withMessages([
+                        'email' => ['Akun Anda berstatus nonaktif. Silakan hubungi Admin/Tata Usaha SPPG Kalisapu.'],
+                    ]);
+                }
+
                 return $user;
             }
 

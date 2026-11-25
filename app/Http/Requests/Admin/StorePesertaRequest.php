@@ -34,7 +34,7 @@ class StorePesertaRequest extends FormRequest
             // Akun Login Pengguna Opsional
             'create_account' => ['nullable', 'boolean'],
             'email' => ['required_if:create_account,1', 'nullable', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required_if:create_account,1', 'nullable', 'string', 'min:6'],
+            'password' => ['nullable', 'string', 'max:100'],
             'role' => ['nullable', 'string', 'exists:roles,name'],
         ];
     }
@@ -48,15 +48,13 @@ class StorePesertaRequest extends FormRequest
     {
         return [
             'name.required' => 'Nama lengkap pegawai wajib diisi.',
-            'nik.required' => 'Nomor Induk Kependudukan (NIK) wajib diisi.',
-            'nik.unique' => 'NIK ini sudah terdaftar di sistem.',
+            'nik.required' => 'Nomor Induk / ID Relawan wajib diisi.',
+            'nik.unique' => 'Nomor Induk / ID Relawan ini sudah terdaftar di sistem.',
             'uid.integer' => 'Nomor UID mesin harus berupa bilangan bulat.',
             'uid.unique' => 'Nomor UID mesin ini sudah dipakai oleh peserta lain.',
             'jabatan.required' => 'Divisi atau jabatan pegawai wajib dipilih.',
             'email.required_if' => 'Alamat email akun login wajib diisi jika membuat akun.',
             'email.unique' => 'Alamat email ini sudah terdaftar untuk pengguna lain.',
-            'password.required_if' => 'Password login wajib diisi jika membuat akun.',
-            'password.min' => 'Password minimal 6 karakter.',
         ];
     }
 

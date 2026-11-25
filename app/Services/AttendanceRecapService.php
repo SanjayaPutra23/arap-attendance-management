@@ -94,8 +94,8 @@ class AttendanceRecapService
             ];
         }
 
-        // 4. Ambil peserta sesuai filter
-        $pesertaQuery = Peserta::query();
+        // 4. Ambil peserta sesuai filter (secara default hanya pegawai aktif)
+        $pesertaQuery = Peserta::active();
 
         if ($divisi && $divisi !== 'all') {
             $target = strtolower(trim($divisi));
@@ -116,7 +116,7 @@ class AttendanceRecapService
 
         $pesertas = $pesertaQuery->orderBy('name')->get();
         $pesertaIds = $pesertas->pluck('id')->toArray();
-        $pesertaUids = $pesertas->pluck('uid')->filter()->toArray();
+        $pesertaUids = $pesertas->pluck('uid')->filter()->map(fn ($u) => (string) $u)->toArray();
 
         // 5. Batch Eager Loading untuk efisiensi tinggi (hindari N+1 query)
         // A. Presensi Mobile (Prioritas 1)
@@ -134,7 +134,7 @@ class AttendanceRecapService
                 ->whereDate('date', '<=', $endStr)
                 ->orderBy('time')
                 ->get()
-                ->groupBy('iduser');
+                ->groupBy(fn ($p) => (string) $p->iduser);
 
         // C. Permohonan Izin Disetujui (Prioritas 3)
         $approvedLeaves = PermohonanIzin::whereIn('peserta_id', $pesertaIds)
@@ -157,7 +157,8 @@ class AttendanceRecapService
 
         foreach ($pesertas as $peserta) {
             $pesertaMobile = $mobileAttendances->get($peserta->id, collect());
-            $pesertaPools = $peserta->uid ? $pools->get($peserta->uid, collect()) : collect();
+            $uidKey = (string) ($peserta->uid ?? '');
+            $pesertaPools = $uidKey !== '' ? $pools->get($uidKey, collect()) : collect();
             $pesertaLeaves = $approvedLeaves->get($peserta->id, collect());
 
             $pesertaOnTime = 0;
@@ -217,7 +218,16 @@ class AttendanceRecapService
                     $latest = $datePools->last();
 
                     $checkInTime = $earliest->time;
-                    $checkOutTime = $latest->id !== $earliest->id ? $latest->time : null;
+                    $checkOutTime = null;
+
+                    // Jika terdapat >1 scan di hari yang sama, gunakan scan terakhir jika selisih waktu >= 5 menit (300 detik)
+                    if ($latest->id !== $earliest->id) {
+                        $tEarliest = strtotime("{$dateStr} {$earliest->time}");
+                        $tLatest = strtotime("{$dateStr} {$latest->time}");
+                        if ($tEarliest !== false && $tLatest !== false && ($tLatest - $tEarliest) >= 300) {
+                            $checkOutTime = $latest->time;
+                        }
+                    }
 
                     $eval = $this->calculationService->evaluateAttendance(
                         $peserta,

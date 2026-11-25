@@ -34,6 +34,24 @@
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm bg-white h-100 border-start border-success border-4">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold">Pegawai Aktif</span>
+                    <div class="h3 fw-bold text-success my-1">{{ $stats['active'] ?? $stats['total'] }}</div>
+                    <small class="text-success"><i class="bi bi-person-check me-1"></i> Operasional</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm bg-white h-100 border-start border-secondary border-4">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold">Pegawai Nonaktif</span>
+                    <div class="h3 fw-bold text-secondary my-1">{{ $stats['inactive'] ?? 0 }}</div>
+                    <small class="text-muted"><i class="bi bi-person-slash me-1"></i> Diarsipkan</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm bg-white h-100 border-start border-primary border-4">
                 <div class="card-body p-3">
                     <span class="text-muted small fw-semibold">Staf Officer</span>
@@ -43,29 +61,20 @@
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card border-0 shadow-sm bg-white h-100 border-start border-success border-4">
-                <div class="card-body p-3">
-                    <span class="text-muted small fw-semibold">Relawan Operasional</span>
-                    <div class="h3 fw-bold text-success my-1">{{ $stats['relawan'] }}</div>
-                    <small class="text-success"><i class="bi bi-egg-fried me-1"></i> Operasional</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-3">
             <div class="card border-0 shadow-sm bg-white h-100 border-start border-info border-4">
                 <div class="card-body p-3">
-                    <span class="text-muted small fw-semibold">Memiliki Akun Login</span>
-                    <div class="h3 fw-bold text-info my-1">{{ $stats['has_account'] }}</div>
-                    <small class="text-muted">Dapat presensi mobile PWA</small>
+                    <span class="text-muted small fw-semibold">Relawan Aktif</span>
+                    <div class="h3 fw-bold text-info my-1">{{ $stats['relawan'] }}</div>
+                    <small class="text-info"><i class="bi bi-egg-fried me-1"></i> Operasional</small>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4 col-xl-3">
+        <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm bg-white h-100 border-start border-warning border-4">
                 <div class="card-body p-3">
-                    <span class="text-muted small fw-semibold">Belum Memiliki Akun</span>
-                    <div class="h3 fw-bold text-warning my-1">{{ $stats['no_account'] }}</div>
-                    <small class="text-muted">Perlu dibuatkan akun login</small>
+                    <span class="text-muted small fw-semibold">Memiliki Akun</span>
+                    <div class="h3 fw-bold text-warning my-1">{{ $stats['has_account'] }}</div>
+                    <small class="text-muted">Akses Mobile PWA</small>
                 </div>
             </div>
         </div>
@@ -76,16 +85,24 @@
         <div class="card-body p-3 p-md-4">
             <form method="GET" action="{{ route('admin.pegawai.index') }}" id="filterPegawaiForm">
                 <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <label class="form-label small fw-semibold text-muted mb-1">Pencarian Nama, NIK, atau UID</label>
+                    <div class="col-12 col-md-5 col-xl-4">
+                        <label class="form-label small fw-semibold text-muted mb-1">Pencarian Nama, Nomor Induk, atau UID</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" name="search" class="form-control" placeholder="Cari nama, NIK, atau UID..." value="{{ $search }}">
+                            <input type="text" name="search" class="form-control" placeholder="Cari nama, Nomor Induk, atau UID..." value="{{ $search }}">
                             <button type="submit" class="btn btn-primary-arap">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6 col-md-3 col-xl-3">
+                        <label class="form-label small fw-semibold text-muted mb-1">Status Keaktifan</label>
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="aktif" {{ ($status ?? 'aktif') === 'aktif' ? 'selected' : '' }}>Pegawai Aktif</option>
+                            <option value="nonaktif" {{ ($status ?? '') === 'nonaktif' ? 'selected' : '' }}>Pegawai Nonaktif</option>
+                            <option value="semua" {{ ($status ?? '') === 'semua' ? 'selected' : '' }}>Semua Pegawai</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2 col-xl-3">
                         <label class="form-label small fw-semibold text-muted mb-1">Status Akun Login</label>
                         <select name="account_status" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="all" {{ ($accountStatus === 'all' || !$accountStatus) ? 'selected' : '' }}>Semua Status Akun</option>
@@ -93,7 +110,7 @@
                             <option value="without_account" {{ $accountStatus === 'without_account' ? 'selected' : '' }}>Belum Ada Akun</option>
                         </select>
                     </div>
-                    <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <div class="col-12 col-sm-6 col-md-2 col-xl-2">
                         <a href="{{ route('admin.pegawai.index') }}" class="btn btn-sm btn-outline-secondary w-100">
                             <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filter
                         </a>
@@ -154,15 +171,22 @@
                 </thead>
                 <tbody>
                     @forelse($pegawaiList as $p)
-                        <tr>
+                        <tr class="{{ ! $p->is_active ? 'table-light opacity-75' : '' }}">
                             <td>
-                                <div class="fw-bold text-dark">{{ $p->name }}</div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="fw-bold text-dark">{{ $p->name }}</span>
+                                    @if($p->is_active)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">Aktif</span>
+                                    @else
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.65rem;">Nonaktif</span>
+                                    @endif
+                                </div>
                                 @if($p->telp)
                                     <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ $p->telp }}</small>
                                 @endif
                             </td>
                             <td>
-                                <div class="fw-semibold">NIK: {{ $p->nik ?? '-' }}</div>
+                                <div class="fw-semibold">ID / NIK: {{ $p->nik ?? '-' }}</div>
                                 <small class="text-muted">UID Mesin: {{ $p->uid ?? '-' }}</small>
                             </td>
                             <td>
@@ -210,6 +234,9 @@
                                 </span>
                             </td>
                             <td class="text-end">
+                                @php
+                                    $hasHistory = ($p->mobile_attendances_count > 0 || $p->pools_count > 0 || $p->permohonan_izins_count > 0);
+                                @endphp
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-outline-primary btn-edit-pegawai"
                                             data-id="{{ $p->id }}"
@@ -226,14 +253,37 @@
                                         <i class="bi bi-pencil"></i>
                                     </button>
 
-                                    <form method="POST" action="{{ route('admin.pegawai.destroy', $p) }}" class="d-inline"
-                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus pegawai \'{{ $p->name }}\'?')">
+                                    <!-- Toggle Status Aktif / Nonaktif -->
+                                    <form method="POST" action="{{ route('admin.pegawai.toggle-status', $p) }}" class="d-inline"
+                                          onsubmit="return confirm('Apakah Anda yakin ingin {{ $p->is_active ? 'menonaktifkan' : 'mengaktifkan kembali' }} pegawai \'{{ $p->name }}\'?')">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger" title="Hapus Pegawai">
+                                        @method('PATCH')
+                                        @if($p->is_active)
+                                            <button type="submit" class="btn btn-outline-warning" title="Nonaktifkan Pegawai (Arsipkan)">
+                                                <i class="bi bi-person-x"></i>
+                                            </button>
+                                        @else
+                                            <button type="submit" class="btn btn-outline-success" title="Aktifkan Kembali Pegawai">
+                                                <i class="bi bi-person-check"></i>
+                                            </button>
+                                        @endif
+                                    </form>
+
+                                    @if($hasHistory)
+                                        <button type="button" class="btn btn-outline-secondary" disabled
+                                                title="Tidak dapat dihapus karena memiliki {{ $p->mobile_attendances_count + $p->pools_count + $p->permohonan_izins_count }} data riwayat presensi/log. Gunakan tombol Nonaktifkan (kuning) di samping.">
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                    </form>
+                                    @else
+                                        <form method="POST" action="{{ route('admin.pegawai.destroy', $p) }}" class="d-inline"
+                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pegawai \'{{ $p->name }}\'? Tindakan ini tidak dapat dibatalkan.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger" title="Hapus Pegawai">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -281,8 +331,9 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label for="inputNikPegawai" class="form-label small fw-semibold">NIK (Nomor Induk Kependudukan) <span class="text-danger">*</span></label>
-                            <input type="text" name="nik" id="inputNikPegawai" class="form-control form-control-sm" required placeholder="Contoh: 3328xxxxxxxxxxxx">
+                            <label for="inputNikPegawai" class="form-label small fw-semibold">Nomor Induk / ID Relawan <span class="text-danger">*</span></label>
+                            <input type="text" name="nik" id="inputNikPegawai" class="form-control form-control-sm" required placeholder="Contoh: 1051 atau NIK KTP">
+                            <small class="text-muted" style="font-size: 0.7rem;">Nomor ID login relawan. Boleh sama dengan UID Mesin Fingerprint.</small>
                         </div>
 
                         <div class="col-12 col-md-4">
@@ -346,9 +397,9 @@
                                 </div>
 
                                 <div class="col-12 col-md-6">
-                                    <label for="inputPasswordAccount" class="form-label small fw-semibold" id="labelPasswordAccount">Password Login <span class="text-danger">*</span></label>
-                                    <input type="password" name="password" id="inputPasswordAccount" class="form-control form-control-sm" placeholder="Minimal 6 karakter">
-                                    <small class="text-muted d-block" id="notePasswordAccount" style="font-size: 0.72rem;">Kosongkan jika tidak ingin mengubah password.</small>
+                                    <label for="inputPasswordAccount" class="form-label small fw-semibold" id="labelPasswordAccount">Password Login</label>
+                                    <input type="password" name="password" id="inputPasswordAccount" class="form-control form-control-sm" placeholder="Kosongkan untuk default = Nomor Induk/UID">
+                                    <small class="text-muted d-block" id="notePasswordAccount" style="font-size: 0.72rem;">Kosongkan agar password default otomatis disamakan dengan Nomor Induk / UID (misal: 1051).</small>
                                 </div>
                             </div>
                         </div>
@@ -409,7 +460,8 @@
             toggleAccount.name = 'create_account';
             toggleAccount.checked = false;
             accountContainer.classList.add('d-none');
-            notePassword.classList.add('d-none');
+            notePassword.classList.remove('d-none');
+            notePassword.textContent = 'Kosongkan agar password default otomatis disamakan dengan Nomor Induk / UID (misal: 1051).';
 
             document.getElementById('inputNamaPegawai').value = '';
             document.getElementById('inputNikPegawai').value = '';
@@ -443,6 +495,7 @@
                 toggleAccount.name = 'manage_account';
                 toggleAccount.checked = hasAccount;
                 notePassword.classList.remove('d-none');
+                notePassword.textContent = 'Kosongkan jika tidak ingin mengubah password akun.';
 
                 if (hasAccount) {
                     accountContainer.classList.remove('d-none');

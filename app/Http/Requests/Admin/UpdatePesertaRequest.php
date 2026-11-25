@@ -40,7 +40,7 @@ class UpdatePesertaRequest extends FormRequest
             // Pengelolaan Akun Pengguna Terkait
             'manage_account' => ['nullable', 'boolean'],
             'email' => ['nullable', 'string', 'email', 'max:255'],
-            'password' => ['nullable', 'string', 'min:6'],
+            'password' => ['nullable', 'string', 'max:100'],
             'role' => ['nullable', 'string', 'exists:roles,name'],
         ];
     }
@@ -54,12 +54,11 @@ class UpdatePesertaRequest extends FormRequest
     {
         return [
             'name.required' => 'Nama lengkap pegawai wajib diisi.',
-            'nik.required' => 'NIK wajib diisi.',
-            'nik.unique' => 'NIK ini sudah digunakan oleh pegawai lain.',
+            'nik.required' => 'Nomor Induk / ID Relawan wajib diisi.',
+            'nik.unique' => 'Nomor Induk / ID Relawan ini sudah digunakan oleh pegawai lain.',
             'uid.integer' => 'UID mesin harus berupa bilangan bulat.',
             'uid.unique' => 'UID mesin ini sudah digunakan oleh pegawai lain.',
             'jabatan.required' => 'Divisi atau jabatan pegawai wajib diisi.',
-            'password.min' => 'Password minimal 6 karakter jika ingin diubah.',
         ];
     }
 

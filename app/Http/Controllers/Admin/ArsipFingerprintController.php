@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Mesin;
 use App\Models\Pool;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ArsipFingerprintController extends Controller
@@ -57,11 +58,26 @@ class ArsipFingerprintController extends Controller
             'mesin_count' => Mesin::count(),
         ];
 
+        // Deteksi UID mesin yang memiliki log di pools namun belum terdaftar di pesertas.uid
+        $orphanUids = Pool::query()
+            ->leftJoin('pesertas', 'pools.iduser', '=', 'pesertas.uid')
+            ->whereNull('pesertas.id')
+            ->select(
+                'pools.iduser',
+                DB::raw('count(*) as total_logs'),
+                DB::raw('min(pools.timestamp) as first_log'),
+                DB::raw('max(pools.timestamp) as latest_log')
+            )
+            ->groupBy('pools.iduser')
+            ->orderByDesc('latest_log')
+            ->get();
+
         $mesins = Mesin::orderBy('name')->get();
 
         return view('admin.arsip-fingerprint.index', [
             'logs' => $logs,
             'stats' => $stats,
+            'orphanUids' => $orphanUids,
             'mesins' => $mesins,
             'startDate' => $startDate,
             'endDate' => $endDate,

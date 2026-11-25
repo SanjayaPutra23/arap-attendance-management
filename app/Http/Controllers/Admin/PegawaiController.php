@@ -42,9 +42,17 @@ class PegawaiController extends Controller
         $divisi = $request->input('divisi');
         $search = $request->input('search');
         $accountStatus = $request->input('account_status');
+        $status = $request->input('status', 'aktif');
 
         $query = Peserta::with(['user.roles'])
             ->withCount(['mobileAttendances', 'pools', 'permohonanIzins']);
+
+        // Filter Status Keaktifan Pegawai
+        if ($status === 'aktif') {
+            $query->where('is_active', true);
+        } elseif ($status === 'nonaktif') {
+            $query->where('is_active', false);
+        }
 
         // Filter Divisi
         if ($divisi && $divisi !== 'all') {
@@ -77,10 +85,12 @@ class PegawaiController extends Controller
         // Ringkasan Statistik Pegawai
         $stats = [
             'total' => Peserta::count(),
-            'officers' => Peserta::whereRaw('LOWER(jabatan) = ?', ['officer'])->count(),
-            'relawan' => Peserta::whereRaw('LOWER(jabatan) != ?', ['officer'])->count(),
-            'has_account' => Peserta::has('user')->count(),
-            'no_account' => Peserta::doesntHave('user')->count(),
+            'active' => Peserta::where('is_active', true)->count(),
+            'inactive' => Peserta::where('is_active', false)->count(),
+            'officers' => Peserta::where('is_active', true)->whereRaw('LOWER(jabatan) = ?', ['officer'])->count(),
+            'relawan' => Peserta::where('is_active', true)->whereRaw('LOWER(jabatan) != ?', ['officer'])->count(),
+            'has_account' => Peserta::where('is_active', true)->has('user')->count(),
+            'no_account' => Peserta::where('is_active', true)->doesntHave('user')->count(),
         ];
 
         $roles = Role::orderBy('name')->get();
@@ -93,6 +103,7 @@ class PegawaiController extends Controller
             'divisi' => $divisi,
             'search' => $search,
             'accountStatus' => $accountStatus,
+            'status' => $status,
         ]);
     }
 
@@ -115,13 +126,17 @@ class PegawaiController extends Controller
 
             // Jika admin memilih opsi buat akun login
             if ($request->boolean('create_account')) {
+                $defaultPassword = ! empty($validated['password'])
+                    ? $validated['password']
+                    : ($peserta->nik ?: (string) $peserta->uid);
+
                 $user = User::create([
                     'peserta_id' => $peserta->id,
                     'name' => $peserta->name,
                     'email' => $validated['email'],
                     'nik' => $peserta->nik,
                     'telp' => $peserta->telp,
-                    'password' => Hash::make($validated['password']),
+                    'password' => Hash::make($defaultPassword),
                     'type' => $peserta->type,
                 ]);
 
@@ -183,11 +198,15 @@ class PegawaiController extends Controller
                         $pegawai->user->roles()->sync([$role->id]);
                     }
                 }
-            } elseif ($request->boolean('manage_account') && ! empty($validated['email']) && ! empty($validated['password'])) {
+            } elseif ($request->boolean('manage_account') && ! empty($validated['email'])) {
                 // Buat akun baru untuk pegawai yang sebelumnya belum punya
                 $request->validate([
                     'email' => ['required', 'email', 'unique:users,email'],
                 ]);
+
+                $defaultPassword = ! empty($validated['password'])
+                    ? $validated['password']
+                    : ($pegawai->nik ?: (string) $pegawai->uid);
 
                 $user = User::create([
                     'peserta_id' => $pegawai->id,
@@ -195,7 +214,7 @@ class PegawaiController extends Controller
                     'email' => $validated['email'],
                     'nik' => $pegawai->nik,
                     'telp' => $pegawai->telp,
-                    'password' => Hash::make($validated['password']),
+                    'password' => Hash::make($defaultPassword),
                     'type' => $pegawai->type,
                 ]);
 
@@ -210,6 +229,20 @@ class PegawaiController extends Controller
 
         return redirect()->route('admin.pegawai.index')
             ->with('success', "Data pegawai '{$pegawai->name}' berhasil diperbarui.");
+    }
+
+    /**
+     * Nonaktifkan atau aktifkan kembali pegawai secara non-destruktif.
+     */
+    public function toggleStatus(Peserta $pegawai): RedirectResponse
+    {
+        $pegawai->is_active = ! $pegawai->is_active;
+        $pegawai->save();
+
+        $action = $pegawai->is_active ? 'diaktifkan kembali' : 'dinonaktifkan';
+
+        return redirect()->back()
+            ->with('success', "Pegawai '{$pegawai->name}' berhasil {$action}.");
     }
 
     /**

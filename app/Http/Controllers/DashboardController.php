@@ -39,7 +39,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $roles = $user ? $user->roles->pluck('name')->toArray() : [];
 
-        $totalPeserta = Peserta::count();
+        $totalPeserta = Peserta::active()->count();
         $totalPools = Pool::count();
         $today = Carbon::now('Asia/Jakarta')->toDateString();
 
@@ -86,7 +86,7 @@ class DashboardController extends Controller
             ];
 
             // Ringkasan per divisi
-            $allPesertas = Peserta::all(['id', 'jabatan']);
+            $allPesertas = Peserta::active()->get(['id', 'jabatan']);
             $divisionSummary = [];
 
             foreach (self::DIVISIONS as $divisi) {

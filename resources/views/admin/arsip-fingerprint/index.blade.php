@@ -58,6 +58,76 @@
         </div>
     </div>
 
+    <!-- Orphan UID Detector Panel -->
+    @if(isset($orphanUids) && $orphanUids->isNotEmpty())
+        <div class="alert alert-warning border-0 shadow-sm mb-4 p-3 rounded-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-warning text-dark rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">
+                            Perhatian: Ditemukan {{ $orphanUids->count() }} UID Mesin Belum Terdaftar di Master Pegawai
+                        </h6>
+                        <small class="text-muted">
+                            Mesin fingerprint merekam scan untuk nomor UID berikut, namun UID ini belum disambungkan ke nama pegawai di sistem.
+                        </small>
+                    </div>
+                </div>
+                @can('umum')
+                <a href="{{ route('admin.pegawai.index') }}" class="btn btn-sm btn-warning fw-semibold shadow-sm">
+                    <i class="bi bi-person-plus-fill me-1"></i> Buka Master Pegawai
+                </a>
+                @endcan
+            </div>
+            <div class="table-responsive bg-white rounded border mt-2">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.8rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Nomor UID Mesin</th>
+                            <th>Total Log Mesin</th>
+                            <th>Log Pertama</th>
+                            <th>Log Terakhir</th>
+                            <th>Keterangan / Diagnosa</th>
+                            @can('umum')
+                            <th class="text-end pe-3">Aksi Cepat</th>
+                            @endcan
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($orphanUids as $ou)
+                            <tr>
+                                <td class="ps-3 fw-bold font-monospace text-primary">
+                                    <i class="bi bi-fingerprint me-1"></i> UID {{ $ou->iduser }}
+                                </td>
+                                <td><span class="badge bg-secondary-subtle text-secondary">{{ $ou->total_logs }} Log</span></td>
+                                <td class="text-muted">{{ $ou->first_log }}</td>
+                                <td class="fw-semibold text-dark">{{ $ou->latest_log }}</td>
+                                <td>
+                                    @if(in_array((int)$ou->iduser, [1059, 1060], true))
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            <i class="bi bi-arrow-right-circle me-1"></i> Kemungkinan Re-registrasi Mesin (Riski / Pegawai Baru)
+                                        </span>
+                                    @else
+                                        <span class="text-muted">UID baru dari terminal sidik jari</span>
+                                    @endif
+                                </td>
+                                @can('umum')
+                                <td class="text-end pe-3">
+                                    <a href="{{ route('admin.pegawai.index', ['search' => $ou->iduser]) }}" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.72rem;">
+                                        Hubungkan Pegawai
+                                    </a>
+                                </td>
+                                @endcan
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <!-- Filter Panel -->
     <div class="card border-0 shadow-sm bg-white mb-4">
         <div class="card-body p-3 p-md-4">

@@ -19,6 +19,7 @@ return new class extends Migration
                 $table->string('nik')->nullable();
                 $table->string('type')->nullable();
                 $table->string('jabatan');
+                $table->boolean('is_active')->default(true);
                 $table->string('telp', 200)->nullable();
                 $table->timestamps();
             });

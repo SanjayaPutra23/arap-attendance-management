@@ -43,9 +43,12 @@ class MonitoringController extends Controller
         // Lokasi aktif SPPG sebagai acuan peta & geofence circle
         $activeLocation = AttendanceLocation::where('is_active', true)->first();
 
-        // Base query kehadiran pada tanggal yang dipilih
+        // Base query kehadiran pada tanggal yang dipilih (pegawai aktif)
         $query = MobileAttendance::with(['peserta', 'location', 'photos', 'user'])
-            ->whereDate('attendance_date', $date);
+            ->whereDate('attendance_date', $date)
+            ->whereHas('peserta', function ($q) {
+                $q->where('is_active', true);
+            });
 
         // Filter divisi / jabatan
         if ($divisi && $divisi !== 'all') {

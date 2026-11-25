@@ -20,6 +20,7 @@ class Peserta extends Model
         'nik',
         'type',
         'jabatan',
+        'is_active',
         'telp',
     ];
 
@@ -27,6 +28,7 @@ class Peserta extends Model
     {
         return [
             'uid' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -92,6 +94,14 @@ class Peserta extends Model
     public function scopeOfDivisi(Builder $query, string $divisi): Builder
     {
         return $this->scopeOfJabatan($query, $divisi);
+    }
+
+    /**
+     * Scope untuk filter pegawai aktif.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 
     /**
