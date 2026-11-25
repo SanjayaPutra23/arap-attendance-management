@@ -26,6 +26,7 @@ class AttendanceRecapService
      * @param  string|null  $search  Filter nama/NIK peserta (opsional)
      * @param  string  $mode  Mode rekapitulasi ('bulanan' atau 'mingguan')
      * @param  string|null  $referenceDate  Tanggal acuan untuk mode mingguan (Y-m-d)
+     * @param  Peserta|null  $targetPeserta  Target peserta tunggal (opsional)
      * @return array{
      *     period: array{mode: string, year: int, month: int, start: Carbon, end: Carbon, label: string, reference_date: string},
      *     summary: array{
@@ -49,7 +50,8 @@ class AttendanceRecapService
         ?string $divisi = null,
         ?string $search = null,
         string $mode = 'bulanan',
-        ?string $referenceDate = null
+        ?string $referenceDate = null,
+        ?Peserta $targetPeserta = null
     ): array {
         // 1. Tentukan rentang periode berdasarkan mode
         if ($mode === 'mingguan') {
@@ -94,33 +96,39 @@ class AttendanceRecapService
             ];
         }
 
-        // 4. Ambil peserta sesuai filter (secara default hanya pegawai aktif)
-        $pesertaQuery = Peserta::active();
+        // 4. Ambil peserta sesuai filter
+        if ($targetPeserta !== null) {
+            $pesertas = collect([$targetPeserta]);
+        } else {
+            $pesertaQuery = Peserta::active();
 
-        if ($divisi && $divisi !== 'all') {
-            $target = strtolower(trim($divisi));
-            if ($target === 'security' || $target === 'scurity') {
-                $pesertaQuery->whereIn(DB::raw('LOWER(jabatan)'), ['security', 'scurity']);
-            } else {
-                $pesertaQuery->whereRaw('LOWER(jabatan) = ?', [$target]);
+            if ($divisi && $divisi !== 'all') {
+                $target = strtolower(trim($divisi));
+                if ($target === 'security' || $target === 'scurity') {
+                    $pesertaQuery->whereIn(DB::raw('LOWER(jabatan)'), ['security', 'scurity']);
+                } else {
+                    $pesertaQuery->whereRaw('LOWER(jabatan) = ?', [$target]);
+                }
             }
+
+            if ($search) {
+                $pesertaQuery->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('nik', 'like', "%{$search}%")
+                        ->orWhere('uid', 'like', "%{$search}%");
+                });
+            }
+
+            $pesertas = $pesertaQuery->orderBy('name')->get();
         }
 
-        if ($search) {
-            $pesertaQuery->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('nik', 'like', "%{$search}%")
-                    ->orWhere('uid', 'like', "%{$search}%");
-            });
-        }
-
-        $pesertas = $pesertaQuery->orderBy('name')->get();
         $pesertaIds = $pesertas->pluck('id')->toArray();
         $pesertaUids = $pesertas->pluck('uid')->filter()->map(fn ($u) => (string) $u)->toArray();
 
         // 5. Batch Eager Loading untuk efisiensi tinggi (hindari N+1 query)
         // A. Presensi Mobile (Prioritas 1)
-        $mobileAttendances = MobileAttendance::whereIn('peserta_id', $pesertaIds)
+        $mobileAttendances = MobileAttendance::with(['photos'])
+            ->whereIn('peserta_id', $pesertaIds)
             ->whereDate('attendance_date', '>=', $startStr)
             ->whereDate('attendance_date', '<=', $endStr)
             ->get()
@@ -195,7 +203,13 @@ class AttendanceRecapService
                     $pesertaScoreTotal += $score;
                     $pesertaMobileCount++;
 
+                    $inPhoto = $mobileAtt->photos ? $mobileAtt->photos->firstWhere('type', 'check_in') : null;
+                    $outPhoto = $mobileAtt->photos ? $mobileAtt->photos->firstWhere('type', 'check_out') : null;
+
                     $dailyDetails[$dateStr] = [
+                        'mobile_attendance_id' => $mobileAtt->id,
+                        'in_photo_id' => $inPhoto?->id,
+                        'out_photo_id' => $outPhoto?->id,
                         'status' => $mobileAtt->status,
                         'status_label' => $isOnTime ? 'Tepat Waktu' : 'Terlambat/Awal',
                         'score' => $score,
@@ -248,6 +262,9 @@ class AttendanceRecapService
                     $pesertaFingerprintCount++;
 
                     $dailyDetails[$dateStr] = [
+                        'mobile_attendance_id' => null,
+                        'in_photo_id' => null,
+                        'out_photo_id' => null,
                         'status' => $eval['status'],
                         'status_label' => $isOnTime ? 'Tepat Waktu' : 'Terlambat/Awal',
                         'score' => $score,
@@ -277,6 +294,9 @@ class AttendanceRecapService
                     }
 
                     $dailyDetails[$dateStr] = [
+                        'mobile_attendance_id' => null,
+                        'in_photo_id' => null,
+                        'out_photo_id' => null,
                         'status' => $isSakit ? 'sakit' : 'izin',
                         'status_label' => $isSakit ? 'Sakit' : 'Izin',
                         'score' => 0.0,
@@ -293,6 +313,9 @@ class AttendanceRecapService
                 // Prioritas 4: Hari Libur vs Alpha
                 if ($isHoliday) {
                     $dailyDetails[$dateStr] = [
+                        'mobile_attendance_id' => null,
+                        'in_photo_id' => null,
+                        'out_photo_id' => null,
                         'status' => 'libur',
                         'status_label' => 'Libur ('.$holidayDesc.')',
                         'score' => 0.0,
@@ -304,6 +327,9 @@ class AttendanceRecapService
                 } else {
                     $pesertaAlpha++;
                     $dailyDetails[$dateStr] = [
+                        'mobile_attendance_id' => null,
+                        'in_photo_id' => null,
+                        'out_photo_id' => null,
                         'status' => 'alpha',
                         'status_label' => 'Alpha',
                         'score' => 0.0,
@@ -369,6 +395,43 @@ class AttendanceRecapService
             'summary' => $summary,
             'records' => $records,
             'dates' => $periodDates,
+        ];
+    }
+
+    /**
+     * Mengambil rekapitulasi lengkap untuk 1 peserta spesifik.
+     *
+     * @return array{
+     *     period: array{mode: string, year: int, month: int, start: Carbon, end: Carbon, label: string, reference_date: string},
+     *     dates: array<int, array{date: string, day_name: string, is_libur: bool, libur_ket: ?string}>,
+     *     record: ?array<string, mixed>,
+     *     summary: array<string, mixed>
+     * }
+     */
+    public function getRecapForPeserta(
+        Peserta $peserta,
+        int $year,
+        int $month,
+        string $mode = 'bulanan',
+        ?string $referenceDate = null
+    ): array {
+        $recap = $this->generateRecap(
+            $year,
+            $month,
+            null,
+            null,
+            $mode,
+            $referenceDate,
+            $peserta
+        );
+
+        $record = collect($recap['records'])->firstWhere('peserta.id', $peserta->id);
+
+        return [
+            'period' => $recap['period'],
+            'dates' => $recap['dates'],
+            'record' => $record,
+            'summary' => $recap['summary'],
         ];
     }
 }

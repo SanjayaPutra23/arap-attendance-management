@@ -14,6 +14,7 @@
    - 1.6 [Memahami Skor & Perolehan Poin Kehadiran](#16-memahami-skor--perolehan-poin-kehadiran)
    - 1.7 [Mengajukan Izin atau Sakit dengan Lampiran Surat Dokter](#17-mengajukan-izin-atau-sakit-dengan-lampiran-surat-dokter)
    - 1.8 [Ganti Kata Sandi Mandiri (Self-Service Password)](#18-ganti-kata-sandi-mandiri-self-service-password)
+   - 1.9 [Rekap & Riwayat Saya (Gabungan Mobile, Sidik Jari, Izin & Unduh PDF)](#19-rekap--riwayat-saya-gabungan-mobile-sidik-jari-izin--unduh-pdf)
 2. [BAGIAN 2 — PANDUAN ADMINISTRATOR & TATA USAHA (PAK ASLAP)](#bagian-2--panduan-administrator--tata-usaha-pak-aslap)
    - 2.1 [Membaca Dashboard KPI Kehadiran Harian](#21-membaca-dashboard-kpi-kehadiran-harian)
    - 2.2 [Monitoring Presensi Realtime, Peta Sebaran & Bukti Selfie](#22-monitoring-presensi-realtime-peta-sebaran--bukti-selfie)
@@ -134,6 +135,30 @@ Setiap pengguna (Relawan, Officer, maupun Admin) dapat memperbarui kata sandi ak
    - *Tips:* Anda dapat mengklik ikon mata di samping setiap kolom untuk memastikan ejaan kata sandi tidak salah ketik.
 3. Klik tombol **Perbarui Kata Sandi**.
 4. Sistem akan memperbarui kata sandi Anda dan memperbarui sesi login secara aman. Gunakan kata sandi baru ini untuk login berikutnya.
+
+---
+
+### 1.9 Rekap & Riwayat Saya (Gabungan Mobile, Sidik Jari, Izin & Unduh PDF)
+Menu **Rekap & Riwayat Saya** (`/mobile-attendance/history`) adalah pusat transparansi kehadiran mandiri bagi setiap Relawan dan Officer SPPG Kalisapu:
+
+1. **Konsistensi 100% dengan Rekapitulasi Admin:**
+   - Halaman ini tidak hanya menampilkan presensi lewat kamera HP saja, melainkan menggabungkan seluruh sumber kehadiran: **Presensi Mobile PWA**, **Mesin Sidik Jari Fisik (`pools`)**, **Izin/Sakit Resmi**, **Hari Libur Nasional**, dan **Alpha**.
+   - Tampilan periode tersinkronisasi otomatis dengan aturan yang ditetapkan Admin (mode **Bulanan Cut-off 20 s.d. 19** atau **Mingguan Senin s.d. Minggu**).
+2. **6 Kartu Ringkasan Pribadi:**
+   - *Total Hari Kerja:* Akumulasi hari kerja aktif dalam periode berjalan.
+   - *Hadir Tepat Waktu:* Total kehadiran dengan skor penuh `1.00`.
+   - *Terlambat / Pulang Awal:* Total kehadiran dengan pengurangan skor `0.80`.
+   - *Izin & Sakit:* Rincian hari izin resmi dan surat sakit dokter.
+   - *Alpha:* Hari tanpa presensi atau tanpa surat izin (skor `0.00`).
+   - *Total Akumulasi Poin:* Total poin presensi Anda yang menjadi dasar evaluasi operasional.
+3. **Komposisi Sumber Presensi:**
+   - Menampilkan perbandingan jumlah presensi yang Anda lakukan via ponsel pintar (*Mobile PWA*) vs mesin sidik jari fisik (*Mesin Fisik ZKTeco*).
+4. **Tabel Rincian Harian & Bukti Foto Selfie:**
+   - Baris demi baris menyajikan catatan tanggal, jam kedatangan (IN), jam kepulangan (OUT), status kehadiran, serta perolehan poin per hari.
+   - Khusus presensi yang dilakukan via kamera ponsel (*Mobile PWA*), tersedia tombol **Masuk** dan **Pulang** untuk membuka modal pratinjau foto selfie bukti kehadiran Anda.
+5. **Unduh PDF Rekapitulasi Mandiri:**
+   - Ketuk tombol merah **"Unduh PDF Rekap Saya"** di bagian atas tabel.
+   - Sistem akan langsung membuat berkas PDF resmi format **A4 Portrait** lengkap dengan Kop Institusi **Satuan Pelayanan Pemenuhan Gizi (SPPG) Kalisapu**, rincian harian, dan kolom tanda tangan klarifikasi (Anda, Tata Usaha, dan Pak Aslap). Berkas ini dapat dicetak kapan saja untuk klarifikasi poin kehadiran tanpa perlu meminta bantuan Admin.
 
 ---
 

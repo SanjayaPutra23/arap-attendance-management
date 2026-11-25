@@ -263,15 +263,15 @@
             <div class="card card-dashboard h-100 bg-white">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-muted small fw-semibold">Riwayat Kehadiran</span>
+                        <span class="text-muted small fw-semibold">Rekap & Riwayat Saya</span>
                         <div class="bg-success-subtle text-success p-2 rounded">
                             <i class="bi bi-calendar2-check-fill fs-5"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold mb-1">Log & Arsip Mesin</h5>
-                    <p class="text-muted small mb-3">Arsip {{ number_format($totalPools ?? 0, 0, ',', '.') }} log mesin FPDAPUR1 & presensi mobile.</p>
+                    <h5 class="fw-bold mb-1">Presensi Hybrid & Poin</h5>
+                    <p class="text-muted small mb-3">Rekapitulasi gabungan Mobile PWA, Fingerprint, izin, dan poin kehadiran.</p>
                     <a href="{{ route('mobile-attendance.history') }}" class="btn btn-sm btn-outline-success w-100 fw-semibold">
-                        <i class="bi bi-list-check me-1"></i> Lihat Riwayat Log
+                        <i class="bi bi-list-check me-1"></i> Buka Rekap & Riwayat
                     </a>
                 </div>
             </div>
@@ -312,7 +312,7 @@
                     </a>
                     @else
                     <a href="{{ route('mobile-attendance.history') }}" class="btn btn-sm btn-outline-info w-100 fw-semibold">
-                        <i class="bi bi-file-earmark-bar-graph me-1"></i> Riwayat Kehadiran
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i> Rekap & Riwayat Saya
                     </a>
                     @endcan
                 </div>

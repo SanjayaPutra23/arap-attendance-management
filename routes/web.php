@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:20,1')
         ->name('mobile-attendance.store');
     Route::get('/mobile-attendance/history', [MobileAttendanceController::class, 'history'])->name('mobile-attendance.history');
+    Route::get('/mobile-attendance/history/pdf', [MobileAttendanceController::class, 'exportMyRecapPdf'])->name('mobile-attendance.history.pdf');
 
     // Permohonan Izin & Sakit (Relawan)
     Route::get('/izin', [IzinController::class, 'index'])->name('izin.index');

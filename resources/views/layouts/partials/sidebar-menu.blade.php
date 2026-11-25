@@ -15,9 +15,9 @@
     </li>
 
     <li class="nav-item">
-        <a href="{{ route('mobile-attendance.history') }}" class="nav-link {{ request()->routeIs('mobile-attendance.history') ? 'active' : '' }}">
+        <a href="{{ route('mobile-attendance.history') }}" class="nav-link {{ request()->routeIs('mobile-attendance.history*') ? 'active' : '' }}">
             <i class="bi bi-calendar-check text-success"></i>
-            <span>Riwayat Kehadiran</span>
+            <span>Rekap & Riwayat Saya</span>
         </a>
     </li>
 

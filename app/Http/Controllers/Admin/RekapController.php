@@ -124,9 +124,10 @@ class RekapController extends Controller
             $year,
             $month,
             null,
-            $peserta->nik ?: $peserta->name,
+            null,
             $mode,
-            $date
+            $date,
+            $peserta
         );
         $pesertaRecord = collect($recap['records'])->firstWhere('peserta.id', $peserta->id);
 
@@ -224,9 +225,10 @@ class RekapController extends Controller
             $year,
             $month,
             null,
-            $peserta->nik ?: $peserta->name,
+            null,
             $mode,
-            $date
+            $date,
+            $peserta
         );
         $pesertaRecord = collect($recap['records'])->firstWhere('peserta.id', $peserta->id);
 

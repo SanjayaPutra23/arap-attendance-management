@@ -11,12 +11,17 @@ use App\Models\MobileAttendance;
 use App\Models\PermohonanIzin;
 use App\Models\Setting;
 use App\Services\AttendanceCalculationService;
+use App\Services\AttendanceRecapService;
 use App\Services\GeofencingService;
 use App\Services\SelfieMediaService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class MobileAttendanceController extends Controller
@@ -24,7 +29,8 @@ class MobileAttendanceController extends Controller
     public function __construct(
         protected GeofencingService $geofencingService,
         protected SelfieMediaService $selfieMediaService,
-        protected AttendanceCalculationService $attendanceCalculationService
+        protected AttendanceCalculationService $attendanceCalculationService,
+        protected AttendanceRecapService $attendanceRecapService
     ) {}
 
     /**
@@ -349,8 +355,8 @@ class MobileAttendanceController extends Controller
     }
 
     /**
-     * Tampilkan riwayat presensi pribadi relawan/pegawai yang login.
-     * Mengikuti mode periode (bulanan atau mingguan) yang diatur oleh Admin.
+     * Tampilkan rekapitulasi dan riwayat presensi pribadi gabungan (Mobile + Fingerprint + Izin).
+     * Mengikuti mode periode (bulanan 20-19 atau mingguan) yang diatur oleh Admin.
      */
     public function history(Request $request): View
     {
@@ -366,6 +372,12 @@ class MobileAttendanceController extends Controller
         $date = $request->input('date', $now->toDateString());
         $year = (int) $request->input('year', $now->year);
         $month = (int) $request->input('month', $now->month);
+
+        if ($mode === 'mingguan' && $request->filled('date')) {
+            $parsedDate = Carbon::parse($date, 'Asia/Jakarta');
+            $year = $parsedDate->year;
+            $month = $parsedDate->month;
+        }
 
         if ($mode === 'mingguan') {
             $range = $this->attendanceCalculationService->getWeeklyPeriodRange($date);
@@ -389,26 +401,31 @@ class MobileAttendanceController extends Controller
             $nextDate = null;
         }
 
-        $attendances = collect();
-        if ($peserta) {
-            $attendances = MobileAttendance::with(['photos', 'location'])
-                ->where('peserta_id', $peserta->id)
-                ->whereBetween('attendance_date', [
-                    $range['start']->toDateString(),
-                    $range['end']->toDateString(),
-                ])
-                ->orderBy('attendance_date', 'desc')
-                ->get();
-        }
+        $record = null;
+        $dates = [];
+        $totalWorkingDays = 0;
 
-        $countTepatWaktu = $attendances->where('score', 1.00)->count();
-        $countBiasa = $attendances->where('score', 0.80)->count();
-        $totalScore = (float) $attendances->sum('score');
+        if ($peserta) {
+            $recapData = $this->attendanceRecapService->getRecapForPeserta(
+                $peserta,
+                $year,
+                $month,
+                $mode,
+                $date
+            );
+            $record = $recapData['record'];
+            $dates = $recapData['dates'];
+            if (! empty($recapData['period']['label'])) {
+                $range['label'] = $recapData['period']['label'];
+            }
+            $totalWorkingDays = collect($dates)->where('is_libur', false)->count();
+        }
 
         return view('mobile-attendance.history', compact(
             'user',
             'peserta',
-            'attendances',
+            'record',
+            'dates',
             'mode',
             'date',
             'year',
@@ -420,10 +437,72 @@ class MobileAttendanceController extends Controller
             'prevMonth',
             'nextYear',
             'nextMonth',
-            'countTepatWaktu',
-            'countBiasa',
-            'totalScore'
+            'totalWorkingDays'
         ));
+    }
+
+    /**
+     * Ekspor rekapitulasi kehadiran pribadi pengguna ke format PDF portrait resmi (Anti-IDOR).
+     */
+    public function exportMyRecapPdf(Request $request): Response|RedirectResponse
+    {
+        $user = $request->user();
+        $peserta = $user->peserta;
+
+        if (! $peserta) {
+            return redirect()->route('mobile-attendance.history')
+                ->with('error', 'Akun Anda belum ditautkan ke data profil Relawan/Pegawai SPPG.');
+        }
+
+        $mode = Setting::getValue('relawan_recap_period_mode', 'bulanan');
+        if (! in_array($mode, ['bulanan', 'mingguan'], true)) {
+            $mode = 'bulanan';
+        }
+
+        $now = Carbon::now('Asia/Jakarta');
+        $date = $request->input('date', $now->toDateString());
+        $year = (int) $request->input('year', $now->year);
+        $month = (int) $request->input('month', $now->month);
+
+        if ($mode === 'mingguan' && $request->filled('date')) {
+            $parsedDate = Carbon::parse($date, 'Asia/Jakarta');
+            $year = $parsedDate->year;
+            $month = $parsedDate->month;
+        }
+
+        $recap = $this->attendanceRecapService->generateRecap(
+            $year,
+            $month,
+            null,
+            null,
+            $mode,
+            $date,
+            $peserta
+        );
+
+        $pesertaRecord = collect($recap['records'])->firstWhere('peserta.id', $peserta->id);
+
+        if (! $pesertaRecord) {
+            return redirect()->route('mobile-attendance.history')
+                ->with('error', 'Data rekap kehadiran tidak ditemukan untuk periode ini.');
+        }
+
+        $identifier = $peserta->nik ? preg_replace('/[^A-Za-z0-9_-]/', '', $peserta->nik) : Str::slug($peserta->name);
+        $periodSuffix = $mode === 'mingguan'
+            ? 'Mingguan_'.$recap['period']['start']->format('Ymd').'_'.$recap['period']['end']->format('Ymd')
+            : $year.'_'.str_pad((string) $month, 2, '0', STR_PAD_LEFT);
+
+        $fileName = "Rekap_Presensi_{$identifier}_{$periodSuffix}.pdf";
+
+        $pdf = Pdf::loadView('admin.rekap.individual-pdf', [
+            'peserta' => $peserta,
+            'record' => $pesertaRecord,
+            'recap' => $recap,
+            'mode' => $mode,
+            'printedAt' => Carbon::now('Asia/Jakarta'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download($fileName);
     }
 
     /**
